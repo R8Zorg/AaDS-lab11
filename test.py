@@ -1,6 +1,7 @@
-import pygame
 import os
 import re
+
+import pygame
 
 pygame.init()
 
@@ -29,10 +30,16 @@ WINDOW_H = WINDOW_H_ORIG
 
 door_frames = []
 frames_folder = "frames2"
+
+
 def sort_files_numerically(files):
-    def key(name):
-        return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', name)]
-    return sorted(files, key=key)
+    return sorted(
+        files,
+        key=lambda name: [
+            int(s) if s.isdigit() else s for s in re.split(r"(\d+)", name)
+        ],
+    )
+
 
 for filename in sort_files_numerically(os.listdir(frames_folder)):
     if filename.endswith(".png"):
@@ -79,7 +86,9 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos
 
-            if (WINDOW_X <= mouse_x <= WINDOW_X + WINDOW_W) and (WINDOW_Y <= mouse_y <= WINDOW_Y + WINDOW_H):
+            if (WINDOW_X <= mouse_x <= WINDOW_X + WINDOW_W) and (
+                WINDOW_Y <= mouse_y <= WINDOW_Y + WINDOW_H
+            ):
                 if door_index == 0:
                     door_opening = True
                     door_closing = False
