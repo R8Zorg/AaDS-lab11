@@ -1,0 +1,23 @@
+from product import Meat, Pizza, Popcorn, Egg
+
+meat = Meat("замороженное")
+meat.add_steam()
+print(meat)
+print("Время готовки:", meat.cook_time(), "секунд")
+
+pizza = Pizza("обычное")
+print(pizza)
+print("Время готовки:", pizza.cook_time(), "секунд")
+
+popcorn = Popcorn("зерно")
+popcorn.add_steam()
+print(popcorn)
+print("Время готовки:", popcorn.cook_time(), "секунд")
+
+egg = Egg(coolness=10.0)
+print(egg)
+egg.add_steam()
+print(egg)
+egg.cool_down(5.5)
+print("Остывание после охлаждения:", egg.coolness)
+print("Время готовки яйца:", egg.cook_time())
