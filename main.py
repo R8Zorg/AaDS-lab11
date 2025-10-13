@@ -4,7 +4,7 @@ import pygame
 
 pygame.init()
 
-WIN_W, WIN_H = 1500, 650
+WIN_W, WIN_H = 1500, 750
 WIN = pygame.display.set_mode((WIN_W, WIN_H))
 pygame.display.set_caption("Микроволновка")
 
@@ -18,7 +18,7 @@ def load_scaled_image(path, size):
 
 background = load_scaled_image("fon.png", (WIN_W, WIN_H))
 BODY_SIZE = (int(800 * 0.875), int(600 * 0.75))
-BODY_POS = (350, 50)
+BODY_POS = (350, 90)
 body = load_scaled_image("1.png", BODY_SIZE)
 
 WINDOW_RECT = pygame.Rect(BODY_POS[0] - 195, BODY_POS[1] - 65, 710, 570)
@@ -31,10 +31,12 @@ door_opening = door_closing = door_locked = False
 FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
 
 class FoodItem:
-    def __init__(self, folder, pos, inside_offset=30):
+    def __init__(self, folder, pos, inside_offset=30, states_list=None):
+        if states_list is None:
+            states_list = ["frozen", "raw", "done", "overheated"]
         self.states = {state: load_scaled_image(os.path.join(folder, f"{state}.png"), (350, 250))
-                       for state in ["raw", "frozen", "done", "overheated"]}
-        self.state = "frozen"
+                       for state in states_list}
+        self.state = states_list[0]
         self.rect = self.states[self.state].get_rect(topleft=pos)
         self.dragging = self.inside = self.locked = False
         self.offset_x = self.offset_y = 0
@@ -69,20 +71,21 @@ class FoodItem:
         if not self.inside or door_index == 0:
             surface.blit(self.states[self.state], self.rect.topleft)
 
-meat = FoodItem("meat", (1100, 240), inside_offset=30)
-pizza = FoodItem("pizza", (1100, 350), inside_offset=30)
+meat = FoodItem("meat", (1100, 260), inside_offset=0)
+pizza = FoodItem("pizza", (1100, 370), inside_offset=0)
+popcorn = FoodItem("popcorn", (870, 470), inside_offset=0, states_list=["raw", "done", "overheated"])
 
 buttons_folder = "buttons"
 button_data = [
-    ("timer", (875, 85), (155, 65)),
-    ("frozen", (875, 167), (150, 60)),
-    ("double_left", (868, 242), (30, 38)),
-    ("left", (901, 240), (25, 40)),
-    ("ok", (930, 240), (40, 40)),
-    ("right", (975, 240), (25, 40)),
-    ("double_right", (1005, 240), (30, 40)),
-    ("start", (897, 300), (100, 60)),
-    ("stop", (897, 380), (100, 60)),
+    ("timer", (875, 125), (155, 65)),
+    ("frozen", (875, 207), (150, 60)),
+    ("double_left", (868, 282), (30, 38)),
+    ("left", (901, 280), (25, 40)),
+    ("ok", (930, 280), (40, 40)),
+    ("right", (975, 280), (25, 40)),
+    ("double_right", (1005, 280), (30, 40)),
+    ("start", (897, 340), (100, 60)),
+    ("stop", (897, 420), (100, 60)),
 ]
 
 buttons = [{"name": name, "image": load_scaled_image(os.path.join(buttons_folder, f"{name}.png"), size),
@@ -99,19 +102,9 @@ def on_double_right(): print("Событие кнопки: double_right")
 def on_start(): print("Событие кнопки: start")
 def on_stop(): print("Событие кнопки: stop")
 
-button_actions = {
-    "timer": on_timer,
-    "frozen": on_frozen,
-    "double_left": on_double_left,
-    "left": on_left,
-    "ok": on_ok,
-    "right": on_right,
-    "double_right": on_double_right,
-    "start": on_start,
-    "stop": on_stop,
-}
+button_actions = {btn["name"]: globals().get(f"on_{btn['name']}", lambda: None) for btn in buttons}
 
-timer_font = pygame.font.SysFont("Arial", 40)
+timer_font = pygame.font.SysFont("Arial", 50)
 timer_text = "00:00"
 
 running = True
@@ -128,12 +121,13 @@ while running:
             if not door_locked:
                 if meat.handle_mouse_down(mx, my): continue
                 if pizza.handle_mouse_down(mx, my): continue
+                if popcorn.handle_mouse_down(mx, my): continue
 
                 if WINDOW_RECT.collidepoint(mx, my):
                     if door_index == 0:
                         door_opening, door_closing = True, False
                         door_locked = True
-                        meat.locked = pizza.locked = False
+                        meat.locked = pizza.locked = popcorn.locked = False
                     elif door_index == len(door_frames)-1:
                         door_closing, door_opening = True, False
                         door_locked = True
@@ -148,10 +142,12 @@ while running:
         if event.type == pygame.MOUSEBUTTONUP:
             meat.handle_mouse_up()
             pizza.handle_mouse_up()
+            popcorn.handle_mouse_up()
 
         if event.type == pygame.MOUSEMOTION:
             meat.handle_mouse_motion(mx, my)
             pizza.handle_mouse_motion(mx, my)
+            popcorn.handle_mouse_motion(mx, my)
 
         if event.type == pygame.KEYDOWN:
             keys_map = {
@@ -163,17 +159,19 @@ while running:
                 pygame.K_6: ("pizza", "raw"),
                 pygame.K_7: ("pizza", "done"),
                 pygame.K_8: ("pizza", "overheated"),
+                pygame.K_9: ("popcorn", "raw"),
+                pygame.K_0: ("popcorn", "done"),
+                pygame.K_MINUS: ("popcorn", "overheated"),
             }
             if event.key in keys_map:
                 item, state = keys_map[event.key]
                 locals()[item].state = state
 
-    # --- Анимация дверцы ---
     if door_opening:
         door_index = min(door_index+1, len(door_frames)-1)
         if door_index == len(door_frames)-1:
             door_opening = False
-            door_locked = meat.locked = pizza.locked = False
+            door_locked = meat.locked = pizza.locked = popcorn.locked = False
     elif door_closing:
         door_index = max(door_index-1, 0)
         if door_index == 0:
@@ -181,6 +179,7 @@ while running:
             door_locked = False
             meat.locked = meat.inside
             pizza.locked = pizza.inside
+            popcorn.locked = popcorn.inside
 
     WIN.blit(background, (0, 0))
     WIN.blit(body, BODY_POS)
@@ -189,8 +188,10 @@ while running:
 
     meat.draw(WIN, door_index)
     pizza.draw(WIN, door_index)
+    popcorn.draw(WIN, door_index)
     WIN.blit(door_frames[door_index], WINDOW_RECT.topleft)
-    WIN.blit(timer_font.render(timer_text, True, (255, 0, 0)), (880, 100))
+
+    WIN.blit(timer_font.render(timer_text, True, (255, 0, 0)), (890, 130))
 
     pygame.display.flip()
     clock.tick(45)
