@@ -34,13 +34,19 @@ class FoodItem:
     def __init__(self, folder, pos, inside_offset=30, states_list=None):
         if states_list is None:
             states_list = ["frozen", "raw", "done", "overheated"]
-        self.states = {state: load_scaled_image(os.path.join(folder, f"{state}.png"), (350, 250))
-                       for state in states_list}
+        self.folder = folder
+        self.states = {}
+        for state in states_list:
+            if state == "boom":
+                self.states[state] = load_scaled_image(os.path.join(folder, f"{state}.png"), BODY_SIZE)
+            else:
+                self.states[state] = load_scaled_image(os.path.join(folder, f"{state}.png"), (350, 250))
         self.state = states_list[0]
         self.rect = self.states[self.state].get_rect(topleft=pos)
         self.dragging = self.inside = self.locked = False
         self.offset_x = self.offset_y = 0
         self.inside_offset = inside_offset
+        self.is_boom = False
 
     def handle_mouse_down(self, mx, my):
         if not self.locked and self.rect.collidepoint(mx, my):
@@ -57,8 +63,15 @@ class FoodItem:
                 self.inside = True
                 self.rect.centerx = FOOD_HITBOX.centerx
                 self.rect.bottom = FOOD_HITBOX.bottom - self.inside_offset
+                if self.folder == "egg":
+                    self.is_boom = False
             else:
                 self.inside = False
+                if self.folder == "egg" and self.state == "boom":
+                    fallback_state = "raw" if "raw" in self.states else list(self.states.keys())[0]
+                    self.state = fallback_state
+                    self.rect = self.states[self.state].get_rect(topleft=(1100, 480))
+                    self.is_boom = False
 
     def handle_mouse_motion(self, mx, my):
         if self.dragging and not self.locked:
@@ -66,14 +79,12 @@ class FoodItem:
             self.rect.y = my + self.offset_y
 
     def draw(self, surface, door_index):
-        if self.inside:
-            surface.blit(self.states[self.state], self.rect.topleft)
-        if not self.inside or door_index == 0:
-            surface.blit(self.states[self.state], self.rect.topleft)
+        surface.blit(self.states[self.state], self.rect.topleft)
 
 meat = FoodItem("meat", (1100, 260), inside_offset=0)
 pizza = FoodItem("pizza", (1100, 370), inside_offset=0)
 popcorn = FoodItem("popcorn", (870, 470), inside_offset=0, states_list=["raw", "done", "overheated"])
+egg = FoodItem("egg", (1100, 480), inside_offset=0, states_list=["raw", "boom"])
 
 buttons_folder = "buttons"
 button_data = [
@@ -87,22 +98,9 @@ button_data = [
     ("start", (897, 340), (100, 60)),
     ("stop", (897, 420), (100, 60)),
 ]
-
 buttons = [{"name": name, "image": load_scaled_image(os.path.join(buttons_folder, f"{name}.png"), size),
             "rect": pygame.Rect(pos, size)}
            for name, pos, size in button_data if os.path.exists(os.path.join(buttons_folder, f"{name}.png"))]
-
-def on_timer(): print("Событие кнопки: timer")
-def on_frozen(): print("Событие кнопки: frozen")
-def on_double_left(): print("Событие кнопки: double_left")
-def on_left(): print("Событие кнопки: left")
-def on_ok(): print("Событие кнопки: ok")
-def on_right(): print("Событие кнопки: right")
-def on_double_right(): print("Событие кнопки: double_right")
-def on_start(): print("Событие кнопки: start")
-def on_stop(): print("Событие кнопки: stop")
-
-button_actions = {btn["name"]: globals().get(f"on_{btn['name']}", lambda: None) for btn in buttons}
 
 timer_font = pygame.font.SysFont("Arial", 50)
 timer_text = "00:00"
@@ -118,36 +116,38 @@ while running:
             mx, my = event.pos
 
         if event.type == pygame.MOUSEBUTTONDOWN:
+            for btn in buttons:
+                if btn["rect"].collidepoint(mx, my):
+                    print(f"Нажата кнопка: {btn['name']}")
+                    break
+
             if not door_locked:
                 if meat.handle_mouse_down(mx, my): continue
                 if pizza.handle_mouse_down(mx, my): continue
                 if popcorn.handle_mouse_down(mx, my): continue
+                if egg.handle_mouse_down(mx, my): continue
 
                 if WINDOW_RECT.collidepoint(mx, my):
                     if door_index == 0:
                         door_opening, door_closing = True, False
                         door_locked = True
-                        meat.locked = pizza.locked = popcorn.locked = False
+                        meat.locked = pizza.locked = popcorn.locked = egg.locked = False
                     elif door_index == len(door_frames)-1:
                         door_closing, door_opening = True, False
                         door_locked = True
                     continue
 
-                if door_index == 0:
-                    for btn in buttons:
-                        if btn["rect"].collidepoint(mx, my):
-                            button_actions[btn["name"]]()  # фронт-событие
-                            break
-
         if event.type == pygame.MOUSEBUTTONUP:
             meat.handle_mouse_up()
             pizza.handle_mouse_up()
             popcorn.handle_mouse_up()
+            egg.handle_mouse_up()
 
         if event.type == pygame.MOUSEMOTION:
             meat.handle_mouse_motion(mx, my)
             pizza.handle_mouse_motion(mx, my)
             popcorn.handle_mouse_motion(mx, my)
+            egg.handle_mouse_motion(mx, my)
 
         if event.type == pygame.KEYDOWN:
             keys_map = {
@@ -162,16 +162,30 @@ while running:
                 pygame.K_9: ("popcorn", "raw"),
                 pygame.K_0: ("popcorn", "done"),
                 pygame.K_MINUS: ("popcorn", "overheated"),
+
+                pygame.K_q: ("egg", "raw"),
+                pygame.K_w: ("egg", "boom"),
             }
+
             if event.key in keys_map:
                 item, state = keys_map[event.key]
-                locals()[item].state = state
+                obj = locals()[item]
+                obj.state = state
+
+                if item == "egg" and state == "boom":
+                    # Boom заменяет корпус, масштабирован
+                    obj.rect.topleft = BODY_POS
+                    obj.is_boom = True
+
+                if item == "egg" and state == "raw":
+                    obj.rect = obj.states["raw"].get_rect(topleft=(1100, 480))
+                    obj.is_boom = False
 
     if door_opening:
         door_index = min(door_index+1, len(door_frames)-1)
         if door_index == len(door_frames)-1:
             door_opening = False
-            door_locked = meat.locked = pizza.locked = popcorn.locked = False
+            door_locked = meat.locked = pizza.locked = popcorn.locked = egg.locked = False
     elif door_closing:
         door_index = max(door_index-1, 0)
         if door_index == 0:
@@ -180,17 +194,23 @@ while running:
             meat.locked = meat.inside
             pizza.locked = pizza.inside
             popcorn.locked = popcorn.inside
+            egg.locked = egg.inside
 
     WIN.blit(background, (0, 0))
-    WIN.blit(body, BODY_POS)
-    for btn in buttons:
-        WIN.blit(btn["image"], btn["rect"].topleft)
 
-    meat.draw(WIN, door_index)
-    pizza.draw(WIN, door_index)
-    popcorn.draw(WIN, door_index)
+    if egg.is_boom:
+        WIN.blit(egg.states["boom"], BODY_POS)
+    else:
+        WIN.blit(body, BODY_POS)
+
+    for item in [meat, pizza, popcorn, egg]:
+        if not (item.folder == "egg" and item.is_boom):
+            item.draw(WIN, door_index)
+
     WIN.blit(door_frames[door_index], WINDOW_RECT.topleft)
 
+    for btn in buttons:
+        WIN.blit(btn["image"], btn["rect"].topleft)
     WIN.blit(timer_font.render(timer_text, True, (255, 0, 0)), (890, 130))
 
     pygame.display.flip()
