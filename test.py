@@ -1,10 +1,12 @@
 import time
+import threading
 
 class Microwave:
     def __init__(self):
         self.timer = 0
         self._is_door_opened : bool = False
         self._is_running : bool = False
+        self._thread = None
 
     def open_door(self):
         self._is_door_opened = True
@@ -36,6 +38,8 @@ class Microwave:
             self._is_running = True
             print("Начинаю работу.")
             self.run_timer()
+            self._thread = threading.Thread(target = self.run_timer)
+            self._thread.start()
         else:
             # Если уже работает, добавляем 30 секунд
             self.timer += 30
@@ -61,9 +65,12 @@ class Microwave:
             print("Время закончилось!")
 
 
-microwave = Microwave()
 
+microwave = Microwave()
 microwave.open_door()
 microwave.close_door()
 microwave.add_time(60)
 microwave.start()
+
+time.sleep(2)
+microwave.open_door()
