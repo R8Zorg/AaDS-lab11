@@ -16,14 +16,14 @@ class Product:
         return f"{self.name} ({self.state}){steam_str}"
 
 class Meat(Product):
-    class valid_states(enum.Enum):
-        frozen = "замороженное"
-        lost = "оттаяное"
-        ready = "готовое"
-        overheated = "перегретое"
+    class ValidStates(enum.Enum):
+        FROZEN = "замороженное"
+        LOST = "оттаяное"
+        READY = "готовое"
+        OVERHEATED = "перегретое"
 
     def __init__(self, state: str):
-        if state not in Meat.valid_states:
+        if state not in Meat.ValidStates:
             raise ValueError(f"Неверное состояние мяса: {state}"
                              )
         super().__init__("Мясо", state)
