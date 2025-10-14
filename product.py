@@ -1,40 +1,45 @@
+import enum
+
 class Product:
     def __init__(self, name: str, state: str):
         self.name = name
         self.state = state
         self.with_steam = False
 
-    def add_steam(self):
-        self.with_steam = True
+
 
     def cook_time(self) -> int:
-
-        return 60
+        pass
 
     def __str__(self):
         steam_str = " + пар" if self.with_steam else ""
         return f"{self.name} ({self.state}){steam_str}"
 
-
 class Meat(Product):
-    valid_states = {"замороженное", "оттаяное", "готовое", "перегретое"}
+    class valid_states(enum.Enum):
+        frozen = "замороженное"
+        lost = "оттаяное"
+        ready = "готовое"
+        overheated = "перегретое"
 
     def __init__(self, state: str):
         if state not in Meat.valid_states:
-            raise ValueError(f"Неверное состояние мяса: {state}")
+            raise ValueError(f"Неверное состояние мяса: {state}"
+                             )
         super().__init__("Мясо", state)
 
     def cook_time(self) -> int:
-        times = {
+       times: dict[str,int]  = {
             "замороженное": 300,
             "оттаяное": 180,
             "готовое": 60,
-            "перегретое": 30,
+            "перегретое": 30
         }
-        base_time = times[self.state]
-        if self.with_steam:
-            base_time = int(base_time * 0.8)
-        return base_time
+       print(times["замороженное"])
+       base_time = times[self.state]
+       if self.with_steam:
+           base_time = int(base_time * 0.8)
+       return base_time
 
 
 class Pizza(Product):
