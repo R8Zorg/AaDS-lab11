@@ -20,6 +20,8 @@ background = load_scaled_image("fon.png", (WIN_W, WIN_H))
 BODY_SIZE = (int(800 * 0.875), int(600 * 0.75))
 BODY_POS = (350, 90)
 body = load_scaled_image("1.png", BODY_SIZE)
+body_light = load_scaled_image("1_light.png", BODY_SIZE)
+light_on = False
 
 WINDOW_RECT = pygame.Rect(BODY_POS[0] - 195, BODY_POS[1] - 65, 710, 570)
 frames_folder = "frames2"
@@ -105,6 +107,34 @@ buttons = [{"name": name, "image": load_scaled_image(os.path.join(buttons_folder
 timer_font = pygame.font.SysFont("Arial", 50)
 timer_text = "00:00"
 
+# --- Методы для кнопок ---
+def timer_button():
+    print("Нажата кнопка: timer")
+
+def frozen_button():
+    print("Нажата кнопка: frozen")
+
+def double_left_button():
+    print("Нажата кнопка: double_left")
+
+def left_button():
+    print("Нажата кнопка: left")
+
+def ok_button():
+    print("Нажата кнопка: ok")
+
+def right_button():
+    print("Нажата кнопка: right")
+
+def double_right_button():
+    print("Нажата кнопка: double_right")
+
+def start_button():
+    print("Нажата кнопка: start")
+
+def stop_button():
+    print("Нажата кнопка: stop")
+
 running = True
 while running:
     mx = my = 0
@@ -118,7 +148,11 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             for btn in buttons:
                 if btn["rect"].collidepoint(mx, my):
-                    print(f"Нажата кнопка: {btn['name']}")
+                    func_name = f"{btn['name']}_button"
+                    if func_name in globals():
+                        globals()[func_name]()
+                    else:
+                        print(f"Нажата кнопка: {btn['name']}")
                     break
 
             if not door_locked:
@@ -173,13 +207,16 @@ while running:
                 obj.state = state
 
                 if item == "egg" and state == "boom":
-                    # Boom заменяет корпус, масштабирован
                     obj.rect.topleft = BODY_POS
                     obj.is_boom = True
 
                 if item == "egg" and state == "raw":
                     obj.rect = obj.states["raw"].get_rect(topleft=(1100, 480))
                     obj.is_boom = False
+
+            if event.key == pygame.K_l:
+                light_on = not light_on
+                print("Свет:", "включен" if light_on else "выключен")
 
     if door_opening:
         door_index = min(door_index+1, len(door_frames)-1)
@@ -201,7 +238,10 @@ while running:
     if egg.is_boom:
         WIN.blit(egg.states["boom"], BODY_POS)
     else:
-        WIN.blit(body, BODY_POS)
+        if light_on:
+            WIN.blit(body_light, BODY_POS)
+        else:
+            WIN.blit(body, BODY_POS)
 
     for item in [meat, pizza, popcorn, egg]:
         if not (item.folder == "egg" and item.is_boom):
