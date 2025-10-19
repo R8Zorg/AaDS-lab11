@@ -9,7 +9,13 @@ FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
 
 
 class FoodItem:
-    def __init__(self, folder, pos, inside_offset=30, states_list=None):
+    def __init__(
+        self,
+        folder: str,
+        pos: tuple[int, int],
+        inside_offset: int = 30,
+        states_list: list[str] = None,
+    ) -> None:
         if states_list is None:
             states_list = ["frozen", "raw", "done", "overheated"]
         self.folder = folder
@@ -62,5 +68,5 @@ class FoodItem:
             self.rect.x = mx + self.offset_x
             self.rect.y = my + self.offset_y
 
-    def draw(self, surface, door_index):
+    def draw(self, surface):
         surface.blit(self.states[self.state], self.rect.topleft)
