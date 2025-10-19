@@ -11,15 +11,10 @@ pygame.init()
 
 WIN_W, WIN_H = 1500, 750
 WINDOW = pygame.display.set_mode((WIN_W, WIN_H))
-BODY_POS = (350, 90)
-DOOR_RECT = pygame.Rect(BODY_POS[0] - 195, BODY_POS[1] - 65, 710, 570)
 pygame.display.set_caption("Микроволновка")
-
-clock = pygame.time.Clock()
 
 
 background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
-light_on = False
 
 
 # meat = FoodItem(fetch_resource("meat"), (1100, 260), inside_offset=0)
@@ -36,21 +31,21 @@ light_on = False
 
 if __name__ == "__main__":
     microwave: Microwave = Microwave()
-
     while microwave.is_running:
         event: Event
         for event in pygame.event.get():
             microwave.on_event(event)
 
         WINDOW.blit(background, (0, 0))
-        WINDOW.blit(microwave.get_body(), BODY_POS)
+        WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
 
         microwave.update_door()
         microwave.draw_door(WINDOW)
         # microwave.draw_door_hitboxes(WINDOW)
         microwave.draw_buttons(WINDOW)
+        microwave.draw_timer(WINDOW)
         pygame.display.flip()
-        clock.tick(45)
+        pygame.time.Clock().tick(45)
 
     pygame.quit()
     sys.exit()
