@@ -34,12 +34,8 @@ light_on = False
 #     fetch_resource("egg"), (1100, 480), inside_offset=0, states_list=["raw", "boom"]
 # )
 
-# TODO: сделать 2 хитбокса двери: для закрытой и открытой. Проверять по ним
 if __name__ == "__main__":
     microwave: Microwave = Microwave()
-
-    # if (microwave.is_running):
-    #     microwave.draw_buttons(WINDOW)
 
     while microwave.is_running:
         event: Event
@@ -51,6 +47,7 @@ if __name__ == "__main__":
 
         microwave.update_door()
         microwave.draw_door(WINDOW)
+        # microwave.draw_door_hitboxes(WINDOW)
         microwave.draw_buttons(WINDOW)
         pygame.display.flip()
         clock.tick(45)

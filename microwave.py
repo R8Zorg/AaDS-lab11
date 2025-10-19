@@ -14,20 +14,24 @@ class Microwave:
         self.SIZE = self.width, self.height = 1500, 750
         self.BODY_POSITION: tuple[int, int] = (350, 90)
 
-        self._DOOR_X_POSITION = self.BODY_POSITION[0] - 195
-        self._DOOR_Y_POSITION = self.BODY_POSITION[1] - 65
-        self._DOOR_RECT = Rect(self._DOOR_X_POSITION, self._DOOR_Y_POSITION, 710, 570)
         self._BODY_SIZE: tuple[int, int] = (int(800 * 0.875), int(600 * 0.75))
-        self._closed_door_rect: Rect
-        self._openned_door_rect: Rect
         self._body: Surface
         self._body_light: Surface
-        self._is_light_on = False
+
+        self._DOOR_X_POSITION: int = self.BODY_POSITION[0] - 195
+        self._DOOR_Y_POSITION: int = self.BODY_POSITION[1] - 65
+        self._DOOR_RECT: Rect = Rect(
+            self._DOOR_X_POSITION, self._DOOR_Y_POSITION, 710, 570
+        )
+        self._closed_door_rect: Rect = Rect(390, 115, 470, 385)
+        self._openned_door_rect: Rect = Rect(169, 30, 242, 556)
         self._door_state = 0
         self._is_door_closed: bool = True
         self._is_door_openning: bool = False
         self._is_door_closing: bool = False
         self._door_frames: list[Surface]
+
+        self._is_light_on = False
         self._button_data: list[tuple[str, tuple[int, int], tuple[int, int], object]]
         self._buttons: list[dict[str, str | Surface | Rect]]
         self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 74)
@@ -84,10 +88,6 @@ class Microwave:
         self._body_light = load_scaled_image(
             fetch_resource("microwave_light.png"), self._BODY_SIZE
         )
-        self._closed_door_rect = self._door_frames[0].get_rect()
-        self._openned_door_rect = self._door_frames[
-            len(self._door_frames) - 1
-        ].get_rect()
 
         self.is_running = True
 
@@ -130,18 +130,19 @@ class Microwave:
         for button in self._buttons:
             surface.blit(button["image"], button["rect"].topleft)
 
-    def draw_door(self, surface: Surface) -> None:
+    def draw_door_hitboxes(self, surface: Surface) -> None:
         pygame.draw.rect(surface, (0, 255, 0), self._closed_door_rect, 2)
+        pygame.draw.rect(surface, (0, 255, 0), self._openned_door_rect, 2)
+
+    def draw_door(self, surface: Surface) -> None:
         door: Surface = self._door_frames[self._door_state]
         surface.blit(door, self._DOOR_RECT.topleft)
 
     def update_door(self) -> None:
         if self._is_door_openning:
-            # print(self._door_state)
             if self._door_state < len(self._door_frames) - 1:
                 self._door_state += 1
             else:
-                # print(f"Door not openning anymore. {self._is_door_openning}")
                 self._is_door_openning = False
         elif self._is_door_closing:
             if self._door_state > 0:
@@ -156,17 +157,15 @@ class Microwave:
             case pygame.QUIT:
                 self.is_running = False
             case pygame.MOUSEBUTTONDOWN:
-                # print(f"MX: {mx}, MY: {my}")
                 for button in self._buttons:
                     if button["rect"].collidepoint(mx, my):  # type: ignore
                         button["action"]()  # type: ignore
                 if bool(self._is_door_openning + self._is_door_closing) is True:
                     return
                 if self._closed_door_rect.collidepoint(mx, my):
-                    if self._door_state == 0:
-                        self._is_door_closed = False
-                        self._is_door_openning = True
-                        return
-                    else:
-                        self._is_door_closing = True
-                        return
+                    self._is_door_closed = False
+                    self._is_door_openning = True
+                    return
+                if self._openned_door_rect.collidepoint(mx, my):
+                    self._is_door_closing = True
+                    return
