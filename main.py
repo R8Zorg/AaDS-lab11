@@ -17,37 +17,44 @@ pygame.display.set_caption("Микроволновка")
 background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
 
 
-# meat = FoodItem(fetch_resource("meat"), (1100, 260), inside_offset=0)
-# pizza = FoodItem(fetch_resource("pizza"), (1100, 370), inside_offset=0)
-# popcorn = FoodItem(
-#     fetch_resource("popcorn"),
-#     (870, 470),
-#     inside_offset=0,
-#     states_list=["raw", "done", "overheated"],
-# )
-# egg = FoodItem(
-#     fetch_resource("egg"), (1100, 480), inside_offset=0, states_list=["raw", "boom"]
-# )
+meat = FoodItem(fetch_resource("meat"), (1100, 260), inside_offset=0)
+pizza = FoodItem(fetch_resource("pizza"), (1100, 370), inside_offset=0)
+popcorn = FoodItem(
+    fetch_resource("popcorn"),
+    (870, 470),
+    inside_offset=0,
+    states_list=["raw", "done", "overheated"],
+)
+egg = FoodItem(
+    fetch_resource("egg"), (1100, 480), inside_offset=0, states_list=["raw", "boom"]
+)
 
 
-        
+def render(surface: pygame.Surface):
+    WINDOW.blit(background, (0, 0))
+    WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
+
+    microwave.update_door()
+    microwave.draw_door(surface)
+    # microwave.draw_door_hitboxes(WINDOW)
+    microwave.draw_buttons(surface)
+    microwave.draw_timer(surface)
+
+    meat.draw(surface)
+    pizza.draw(surface)
+    egg.draw(surface)
+
+    pygame.display.flip()
+    pygame.time.Clock().tick(45)
+
+
 if __name__ == "__main__":
     microwave: Microwave = Microwave()
     while microwave.is_running:
         event: Event
         for event in pygame.event.get():
             microwave.on_event(event)
-
-        WINDOW.blit(background, (0, 0))
-        WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
-
-        microwave.update_door()
-        microwave.draw_door(WINDOW)
-        # microwave.draw_door_hitboxes(WINDOW)
-        microwave.draw_buttons(WINDOW)
-        microwave.draw_timer(WINDOW)
-        pygame.display.flip()
-        pygame.time.Clock().tick(45)
+        render(WINDOW)
 
     pygame.quit()
     sys.exit()
