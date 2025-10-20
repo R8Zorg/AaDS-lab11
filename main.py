@@ -29,29 +29,8 @@ background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
 #     fetch_resource("egg"), (1100, 480), inside_offset=0, states_list=["raw", "boom"]
 # )
 
-class Button:
-    def __init__(self, rect: pygame.Rect, image_off, image_on, callback):
-        self.rect = rect
-        self.image_off = image_off
-        self.image_on = image_on
-        self.callback = callback
-        self.is_active = False
 
-    def draw(self, surface):
-        if self.is_active:
-            surface.blit(self.image_on, self.rect.topleft)
-        else:
-            surface.blit(self.image_off, self.rect.topleft)
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                self.is_active = not self.is_active
-                self.callback(self.is_active)
-                return True
-        return False
         
-
 if __name__ == "__main__":
     microwave: Microwave = Microwave()
     while microwave.is_running:
