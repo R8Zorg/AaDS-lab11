@@ -9,6 +9,7 @@ from utils import fetch_resource, load_scaled_image
 
 pygame.init()
 
+
 WIN_W, WIN_H = 1500, 750
 WINDOW = pygame.display.set_mode((WIN_W, WIN_H))
 pygame.display.set_caption("Микроволновка")
@@ -17,16 +18,19 @@ pygame.display.set_caption("Микроволновка")
 background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
 
 
-meat = FoodItem(fetch_resource("meat"), (1100, 260), inside_offset=0)
-pizza = FoodItem(fetch_resource("pizza"), (1100, 370), inside_offset=0)
+meat = FoodItem(fetch_resource(food="meat"), (1100, 260), inside_offset=0)
+pizza = FoodItem(fetch_resource(food="pizza"), (1100, 370), inside_offset=0)
 popcorn = FoodItem(
-    fetch_resource("popcorn"),
+    fetch_resource(food="popcorn"),
     (870, 470),
     inside_offset=0,
     states_list=["raw", "done", "overheated"],
 )
 egg = FoodItem(
-    fetch_resource("egg"), (1100, 480), inside_offset=0, states_list=["raw", "boom"]
+    fetch_resource(food="egg"),
+    (1100, 480),
+    inside_offset=0,
+    states_list=["raw", "boom"],
 )
 
 

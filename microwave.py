@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+
 import pygame
 from pygame import Rect, Surface
 from pygame.event import Event
@@ -82,7 +83,7 @@ class Microwave:
         )
 
     def initialize_data(self) -> None:
-        frames_folder: str = fetch_resource("door_frames")
+        frames_folder: str = fetch_resource(microwave="door_frames")
         self._door_frames = [
             load_scaled_image(
                 os.path.join(frames_folder, file),
@@ -92,7 +93,7 @@ class Microwave:
             if file.endswith(".png")
         ]
 
-        buttons_folder = fetch_resource("buttons")
+        buttons_folder = fetch_resource(microwave="buttons")
         self._button_data = [
             ("timer", (0.75, 0.077), (0.221, 0.144), self.on_timer_click),
             ("frozen", (0.75, 0.26), (0.214, 0.133), self.on_quick_defrost_click),
@@ -110,9 +111,11 @@ class Microwave:
             ("stop", (0.781, 0.733), (0.142, 0.133), self.on_stop_click),
         ]
         self._buttons = self._create_buttons(buttons_folder)
-        self._body = load_scaled_image(fetch_resource("microwave.png"), self.BODY_SIZE)
+        self._body = load_scaled_image(
+            fetch_resource(microwave="microwave.png"), self.BODY_SIZE
+        )
         self._body_light = load_scaled_image(
-            fetch_resource("microwave_light.png"), self.BODY_SIZE
+            fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
 
         self.is_running = True
