@@ -10,13 +10,15 @@ from utils import fetch_resource, load_scaled_image
 
 
 class Microwave:
+    SIZE = 1500, 750
+    BODY_POSITION: tuple[int, int] = (350, 90)
+    BODY_SIZE: tuple[int, int] = (700, 450)
+
     def __init__(
         self,
     ) -> None:
+        self.width, self.height = self.SIZE
         self.is_running: bool = False
-        self.SIZE = self.width, self.height = 1500, 750
-        self.BODY_POSITION: tuple[int, int] = (350, 90)
-        self.BODY_SIZE: tuple[int, int] = (700, 450)
 
         self._body: Surface
         self._body_light: Surface
