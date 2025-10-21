@@ -6,7 +6,6 @@ from utils import load_scaled_image
 
 BODY_SIZE = (int(800 * 0.875), int(600 * 0.75))
 FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
-# TODO: добавить custom_state и передачу функцию, которая будет вызываться, если есть custom_state
 
 
 class FoodItem:
