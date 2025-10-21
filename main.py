@@ -3,6 +3,7 @@ import sys
 import pygame
 from pygame.event import Event
 
+from food import Food
 from food_item import FoodItem
 from microwave import Microwave
 from utils import fetch_resource, load_scaled_image
@@ -32,6 +33,14 @@ egg = FoodItem(
     inside_offset=0,
     states_list=["raw", "boom"],
 )
+
+meat_states: dict[str, dict[str, str | int]] = {
+    "frozen": {"path": fetch_resource(food="meat/frozen"), "size": 50},
+    "raw": {"path": fetch_resource(food="meat/raw"), "size": 50},
+    "done": {"path": fetch_resource(food="meat/done"), "size": 50},
+    "overheated": {"path": fetch_resource(food="meat/overheated"), "size": 50},
+}
+new_meat = Food(meat_states, (45, 15), Microwave.SIZE)
 
 
 def render(surface: pygame.Surface):
