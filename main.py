@@ -3,7 +3,7 @@ import sys
 import pygame
 from pygame.event import Event
 
-from food import Food
+from food import Food, ImageInfo
 from food_item import FoodItem
 from microwave import Microwave
 from utils import fetch_resource, load_scaled_image
@@ -19,7 +19,7 @@ pygame.display.set_caption("Микроволновка")
 background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
 
 
-meat = FoodItem(fetch_resource(food="meat"), (1100, 260), inside_offset=0)
+meat0 = FoodItem(fetch_resource(food="meat"), (1100, 260), inside_offset=0)
 pizza = FoodItem(fetch_resource(food="pizza"), (1100, 370), inside_offset=0)
 popcorn = FoodItem(
     fetch_resource(food="popcorn"),
@@ -34,16 +34,17 @@ egg = FoodItem(
     states_list=["raw", "boom"],
 )
 
-meat_states: dict[str, dict[str, str | int]] = {
-    "frozen": {"path": fetch_resource(food="meat/frozen"), "size": 50},
-    "raw": {"path": fetch_resource(food="meat/raw"), "size": 50},
-    "done": {"path": fetch_resource(food="meat/done"), "size": 50},
-    "overheated": {"path": fetch_resource(food="meat/overheated"), "size": 50},
-}
-new_meat = Food(meat_states, (45, 15), Microwave.SIZE)
+# FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
+meat_states: list[ImageInfo] = [
+    ImageInfo("frozen", "meat/frozen.png"),
+    ImageInfo("raw", "meat/raw.png"),
+    ImageInfo("done", "meat/done.png"),
+    ImageInfo("overheated", "meat/overheated.png"),
+]
+meat = Food(meat_states, (350, 250), (1100, 260))
 
 
-def render(surface: pygame.Surface):
+def render(surface: pygame.Surface) -> None:
     WINDOW.blit(background, (0, 0))
     WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
 
@@ -54,8 +55,9 @@ def render(surface: pygame.Surface):
     microwave.draw_timer(surface)
 
     meat.draw(surface)
-    pizza.draw(surface)
-    egg.draw(surface)
+    # meat0.draw(surface)
+    # pizza.draw(surface)
+    # egg.draw(surface)
 
     pygame.display.flip()
     pygame.time.Clock().tick(45)
@@ -67,6 +69,7 @@ if __name__ == "__main__":
         event: Event
         for event in pygame.event.get():
             microwave.on_event(event)
+            meat.on_event(event)
         render(WINDOW)
 
     pygame.quit()
