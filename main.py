@@ -35,26 +35,34 @@ egg = FoodItem(
 )
 
 # FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
+microwave: Microwave = Microwave()
+
 meat_states: list[ImageInfo] = [
     ImageInfo("frozen", "meat/frozen.png"),
     ImageInfo("raw", "meat/raw.png"),
     ImageInfo("done", "meat/done.png"),
     ImageInfo("overheated", "meat/overheated.png"),
 ]
-meat = Food(meat_states, (350, 250), (1100, 260))
+meat = Food(meat_states, (350, 250), (1100, 260), microwave.CLOSED_DOOR_RECT)
 
 
-def render(surface: pygame.Surface) -> None:
+def render(main_window: pygame.Surface, door_state: pygame.Surface) -> None:
     WINDOW.blit(background, (0, 0))
     WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
 
-    microwave.update_door()
-    microwave.draw_door(surface)
-    # microwave.draw_door_hitboxes(WINDOW)
-    microwave.draw_buttons(surface)
-    microwave.draw_timer(surface)
+    microwave.draw_buttons(main_window)
+    microwave.draw_timer(main_window)
+    if meat.is_inside:
+        meat.draw(main_window)
+        microwave.update_door()
+        microwave.draw_door(main_window)
+    else:
+        microwave.update_door()
+        microwave.draw_door(main_window)
+        meat.draw(main_window)
 
-    meat.draw(surface)
+    # microwave.draw_door_hitboxes(WINDOW)
+
     # meat0.draw(surface)
     # pizza.draw(surface)
     # egg.draw(surface)
@@ -64,13 +72,18 @@ def render(surface: pygame.Surface) -> None:
 
 
 if __name__ == "__main__":
-    microwave: Microwave = Microwave()
-    while microwave.is_running:
+    is_running = True
+    while is_running:
         event: Event
         for event in pygame.event.get():
-            microwave.on_event(event)
-            meat.on_event(event)
-        render(WINDOW)
+            if event.type == pygame.QUIT:
+                is_running = False
+                break
+            if meat.handle_event(event, microwave.is_door_closed):
+                continue
+            else:
+                microwave.handle_event(event)
+        render(WINDOW, microwave._door_state)
 
     pygame.quit()
     sys.exit()

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import pygame
-from pygame import Surface
+from pygame import Rect, Surface
 from pygame.event import Event
 
 from utils import fetch_resource, load_scaled_image
@@ -14,13 +14,14 @@ class ImageInfo:
 
 
 class Food:
-    INSIDE_OFFSET: int = 30
+    INSIDE_OFFSET: int = 20
 
     def __init__(
         self,
         states: list[ImageInfo],
         size: tuple[int, int],
         position: tuple[int, int],
+        microwave_door_rect: Rect,
     ) -> None:
         if states == []:
             raise AttributeError("Список состояний не может быть пустым")
@@ -32,9 +33,14 @@ class Food:
 
         self._convert_states_to_surface()
         self._current_state: Surface = next(iter(self._states.values()))
+        self.is_inside: bool = False
+        self._rect = self._current_state.get_rect(topleft=position)
 
         self._is_dragging: bool = False
-        self._drag_offset: tuple[int, int] = (0, 0)
+        self._offset_x = 0
+        self._offset_y = 0
+
+        self._microwave_inside: Rect = microwave_door_rect
 
     def _convert_states_to_surface(self) -> None:
         info: ImageInfo
@@ -44,24 +50,51 @@ class Food:
             )
 
     def draw(self, window: Surface) -> None:
-        if self._current_state:
-            window.blit(self._current_state, self._position)
+        window.blit(self._current_state, self._rect.topleft)
+        # pygame.draw.rect(window, (0, 0, 255), self._microwave_inside, 2)
 
-    def _on_mouse_down(self, event: Event) -> None:
-        rect = self._current_state.get_rect(topleft=self._position)
-        if rect.collidepoint(pygame.mouse.get_pos()):
+    def _handle_mouse_down(self, event: Event, is_door_closed: bool) -> bool:
+        mx, my = event.pos
+        # rect = self._current_state.get_rect(topleft=self._position)
+        if self.is_inside and is_door_closed:
+            return False
+        if self._rect.collidepoint(mx, my):
             self._is_dragging = True
-            self._drag_offset = (
-                self._position[0] - event.pos[0],
-                self._position[1] - event.pos[1],
-            )
+            self._offset_x = self._rect.x - mx
+            self._offset_y = self._rect.y - my
+            return True
+        return False
 
-    def on_event(self, event: Event) -> None:
+    def _handle_mouse_up(self, event: Event, is_door_closed: bool) -> bool:
+        self._is_dragging = False
+        if (
+            self._microwave_inside.collidepoint(self._rect.center)
+            and not is_door_closed
+        ):
+            self.is_inside = True
+            self._rect.centerx = self._microwave_inside.centerx
+            self._rect.bottom = self._microwave_inside.bottom - self.INSIDE_OFFSET
+            return True
+        else:
+            self.is_inside = False
+            return False
+
+    def _handle_mouse_motion(self, event: Event) -> bool:
+        mx, my = event.pos
+        if self._is_dragging:
+            self._rect.x = mx + self._offset_x
+            self._rect.y = my + self._offset_y
+            return True
+        return False
+
+    def handle_event(self, event: Event, is_door_closed: bool) -> bool:
         mx, my = pygame.mouse.get_pos()
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
-                self._on_mouse_down(event)
+                return self._handle_mouse_down(event, is_door_closed)
             case pygame.MOUSEBUTTONUP if event:
-                self._is_dragging = False
+                return self._handle_mouse_up(event, is_door_closed)
             case pygame.MOUSEMOTION if self._is_dragging:
-                self._position = (mx + self._drag_offset[0], my + self._drag_offset[1])
+                return self._handle_mouse_motion(event)
+            case _:
+                return False
