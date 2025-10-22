@@ -29,9 +29,9 @@ class Food:
         self._size: tuple[int, int] = size
         self._states_info: list[ImageInfo] = states
         self._states: dict[str, Surface] = {}
-        self._current_state: Surface = None
 
         self._convert_states_to_surface()
+        self._current_state: Surface = next(iter(self._states.values()))
 
         self._is_dragging: bool = False
         self._drag_offset: tuple[int, int] = (0, 0)
@@ -42,7 +42,6 @@ class Food:
             self._states[info.state] = load_scaled_image(
                 fetch_resource(food=info.path), self._size
             )
-        self._current_state = next(iter(self._states.values()))
 
     def draw(self, window: Surface) -> None:
         if self._current_state:
