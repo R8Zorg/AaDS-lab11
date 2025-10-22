@@ -58,7 +58,6 @@ class FoodItem:
                 self.is_boom = False
         else:
             self.is_inside = False
-            # WARN: folder = "resources/name", not "name"
             if self._object_name == "egg" and self.state == "boom":  # WARN: !!
                 fallback_state = (
                     "raw" if "raw" in self.states else list(self.states.keys())[0]
