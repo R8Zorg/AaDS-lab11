@@ -13,12 +13,13 @@ class Microwave:
     SIZE = 1500, 750
     BODY_POSITION: tuple[int, int] = (350, 90)
     BODY_SIZE: tuple[int, int] = (700, 450)
+    CLOSED_DOOR_RECT: Rect
 
     def __init__(
         self,
     ) -> None:
         self.width, self.height = self.SIZE
-        self.is_running: bool = False
+        self.is_door_closed: bool = True
 
         self._body: Surface
         self._body_light: Surface
@@ -35,12 +36,11 @@ class Microwave:
         self._DOOR_X_POSITION: int = self.BODY_POSITION[0] - 195
         self._DOOR_Y_POSITION: int = self.BODY_POSITION[1] - 65
         self._door_state = 0
-        self._is_door_closed: bool = True
         self._is_door_openning: bool = False
         self._is_door_closing: bool = False
         self._door_frames: list[Surface]
 
-        self._DOOR_RECT, self._closed_door_rect, self._openned_door_rect = (
+        self._DOOR_RECT, self.CLOSED_DOOR_RECT, self._openned_door_rect = (
             self._resize()
         )
 
@@ -120,7 +120,6 @@ class Microwave:
             fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
 
-        self.is_running = True
 
     def _create_buttons(self, buttons_folder: str):
         bx, by = self.BODY_POSITION
@@ -209,23 +208,21 @@ class Microwave:
                 self._door_state -= 1
             else:
                 self._is_door_closing = False
-                self._is_door_closed = True
+                self.is_door_closed = True
 
-    def on_event(self, event: Event) -> None:
+    def handle_event(self, event: Event) -> bool:
         mx, my = pygame.mouse.get_pos()
         match event.type:
-            case pygame.QUIT:
-                self.is_running = False
             case pygame.MOUSEBUTTONDOWN:
                 for button in self._buttons:
                     if button["rect"].collidepoint(mx, my):  # type: ignore
                         button["action"]()  # type: ignore
                 if bool(self._is_door_openning + self._is_door_closing) is True:
-                    return
-                if self._closed_door_rect.collidepoint(mx, my):
-                    self._is_door_closed = False
+                    return False
+                if self.CLOSED_DOOR_RECT.collidepoint(mx, my):
+                    self.is_door_closed = False
                     self._is_door_openning = True
-                    return
+                    return True
                 if self._openned_door_rect.collidepoint(mx, my):
                     self._is_door_closing = True
-                    return
+                    return True
