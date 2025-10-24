@@ -13,7 +13,7 @@ class Microwave:
     SIZE = 1500, 750
     BODY_POSITION: tuple[int, int] = (350, 90)
     BODY_SIZE: tuple[int, int] = (700, 450)
-    CLOSED_DOOR_RECT: Rect
+    INSIDE_RECT: Rect | None = None
 
     def __init__(
         self,
@@ -40,9 +40,10 @@ class Microwave:
         self._is_door_closing: bool = False
         self._door_frames: list[Surface]
 
-        self._DOOR_RECT, self.CLOSED_DOOR_RECT, self._openned_door_rect = (
+        self._DOOR_RECT, self._closed_door_rect, self._openned_door_rect = (
             self._resize()
         )
+        self.INSIDE_RECT = self._closed_door_rect
 
         self._is_light_on = False
         self._button_data: list[
@@ -219,7 +220,7 @@ class Microwave:
                         button["action"]()  # type: ignore
                 if bool(self._is_door_openning + self._is_door_closing) is True:
                     return False
-                if self.CLOSED_DOOR_RECT.collidepoint(mx, my):
+                if self._closed_door_rect.collidepoint(mx, my):
                     self.is_door_closed = False
                     self._is_door_openning = True
                     return True

@@ -15,16 +15,19 @@ class ImageInfo:
 
 class Food:
     INSIDE_OFFSET: int = 20
+    MICROWAVE_INSIDE_RECT: Rect
 
     def __init__(
         self,
         states: list[ImageInfo],
         size: tuple[int, int],
         position: tuple[int, int],
-        microwave_door_rect: Rect,
+        microwave_inside_rect: Rect
     ) -> None:
         if states == []:
             raise AttributeError("Список состояний не может быть пустым")
+
+        self.MICROWAVE_INSIDE_RECT = microwave_inside_rect
 
         self._position: tuple[int, int] = position
         self._size: tuple[int, int] = size
@@ -39,8 +42,6 @@ class Food:
         self._is_dragging: bool = False
         self._offset_x = 0
         self._offset_y = 0
-
-        self._microwave_inside: Rect = microwave_door_rect
 
     def _convert_states_to_surface(self) -> None:
         info: ImageInfo
@@ -68,12 +69,14 @@ class Food:
     def _handle_mouse_up(self, event: Event, is_door_closed: bool) -> bool:
         self._is_dragging = False
         if (
-            self._microwave_inside.collidepoint(self._rect.center)
+            self.MICROWAVE_INSIDE_RECT.collidepoint(self._rect.center)
             and not is_door_closed
         ):
             self.is_inside = True
-            self._rect.centerx = self._microwave_inside.centerx
-            self._rect.bottom = self._microwave_inside.bottom - self.INSIDE_OFFSET
+            self._rect.centerx = self.MICROWAVE_INSIDE_RECT.centerx
+            self._rect.bottom = (
+                self.MICROWAVE_INSIDE_RECT.bottom - self.INSIDE_OFFSET
+            )
             return True
         else:
             self.is_inside = False
