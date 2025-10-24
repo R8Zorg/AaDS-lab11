@@ -20,30 +20,25 @@ background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
 
 
 meat0 = FoodItem(fetch_resource(food="meat"), (1100, 260), inside_offset=0)
-pizza = FoodItem(fetch_resource(food="pizza"), (1100, 370), inside_offset=0)
-popcorn = FoodItem(
-    fetch_resource(food="popcorn"),
-    (870, 470),
-    inside_offset=0,
-    states_list=["raw", "done", "overheated"],
-)
-egg = FoodItem(
-    fetch_resource(food="egg"),
-    (1100, 480),
-    inside_offset=0,
-    states_list=["raw", "boom"],
-)
+
+
+def to_image_info_list(states: list[str]) -> list[ImageInfo]:
+    return [ImageInfo(state, f"meat/{state}.png") for state in states]
+
 
 # FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
-microwave: Microwave = Microwave()
 
-meat_states: list[ImageInfo] = [
-    ImageInfo("frozen", "meat/frozen.png"),
-    ImageInfo("raw", "meat/raw.png"),
-    ImageInfo("done", "meat/done.png"),
-    ImageInfo("overheated", "meat/overheated.png"),
-]
-meat = Food(meat_states, (350, 250), (1100, 260), microwave.CLOSED_DOOR_RECT)
+
+def draw_food(window: pygame.Surface) -> None:
+    for food in food_list:
+        food.draw(window)
+
+
+def is_food_inside() -> bool:
+    for food in food_list:
+        if food.is_inside:
+            return True
+    return False
 
 
 def render(main_window: pygame.Surface, door_state: pygame.Surface) -> None:
@@ -52,14 +47,14 @@ def render(main_window: pygame.Surface, door_state: pygame.Surface) -> None:
 
     microwave.draw_buttons(main_window)
     microwave.draw_timer(main_window)
-    if meat.is_inside:
-        meat.draw(main_window)
+    if is_food_inside():
+        draw_food(main_window)
         microwave.update_door()
         microwave.draw_door(main_window)
     else:
         microwave.update_door()
         microwave.draw_door(main_window)
-        meat.draw(main_window)
+        draw_food(main_window)
 
     # microwave.draw_door_hitboxes(WINDOW)
 
@@ -72,6 +67,21 @@ def render(main_window: pygame.Surface, door_state: pygame.Surface) -> None:
 
 
 if __name__ == "__main__":
+    microwave: Microwave = Microwave()
+    default_states: list[ImageInfo] = to_image_info_list(
+        ["frozen", "raw", "done", "overheated"]
+    )
+    popcorn_states: list[ImageInfo] = to_image_info_list(["raw", "done", "overheated"])
+    meat = Food(default_states, (350, 250), (1100, 260), Microwave.INSIDE_RECT)
+    pizza = Food(default_states, (350, 250), (1100, 370), Microwave.INSIDE_RECT)
+    popcorn = Food(popcorn_states, (350, 250), (870, 470), Microwave.INSIDE_RECT)
+    egg = Food(
+        to_image_info_list(["raw", "boom"]),
+        (350, 250),
+        (1100, 480),
+        Microwave.INSIDE_RECT,
+    )
+    food_list: list[Food] = [meat, pizza, popcorn, egg]
     is_running = True
     while is_running:
         event: Event
