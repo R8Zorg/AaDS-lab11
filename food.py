@@ -52,11 +52,9 @@ class Food:
 
     def draw(self, window: Surface) -> None:
         window.blit(self._current_state, self._rect.topleft)
-        # pygame.draw.rect(window, (0, 0, 255), self._microwave_inside, 2)
 
     def _handle_mouse_down(self, event: Event, is_door_closed: bool) -> bool:
         mx, my = event.pos
-        # rect = self._current_state.get_rect(topleft=self._position)
         if self.is_inside and is_door_closed:
             return False
         if self._rect.collidepoint(mx, my):
