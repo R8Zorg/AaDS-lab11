@@ -65,27 +65,28 @@ def main() -> None:
 
     default_states: list[str] = ["frozen", "raw", "done", "overheated"]
     popcorn_states: list[str] = ["raw", "done", "overheated"]
+    food_size: tuple[int, int] = (350, 250)
     meat = Food(
         to_image_info_list("meat", default_states),
-        (350, 250),
+        food_size,
         (1100, 260),
         microwave.INSIDE_RECT,
     )
     pizza = Food(
         to_image_info_list("pizza", default_states),
-        (350, 250),
+        food_size,
         (1100, 370),
         microwave.INSIDE_RECT,
     )
     popcorn = Food(
         to_image_info_list("popcorn", popcorn_states),
-        (350, 250),
+        food_size,
         (870, 470),
         microwave.INSIDE_RECT,
     )
     egg = Food(
         to_image_info_list("egg", ["raw", "boom"]),
-        (350, 250),
+        food_size,
         (1100, 480),
         microwave.INSIDE_RECT,
     )
