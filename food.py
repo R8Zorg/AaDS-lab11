@@ -73,7 +73,7 @@ class Food:
             return True
         else:
             self.is_inside = False
-            return False
+            return True
 
     def _handle_mouse_motion(self, event: Event) -> bool:
         mx, my = event.pos
@@ -84,7 +84,8 @@ class Food:
         return False
 
     def handle_event(self, event: Event, is_door_closed: bool) -> bool:
-        mx, my = pygame.mouse.get_pos()
+        if not self._rect.collidepoint(pygame.mouse.get_pos()):
+            return False
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 return self._handle_mouse_down(event, is_door_closed)
