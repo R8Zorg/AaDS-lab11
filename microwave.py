@@ -114,9 +114,7 @@ class Microwave:
             ("stop", (0.781, 0.733), (0.142, 0.133), self.on_stop_click),
         ]
         self._buttons = self._create_buttons(buttons_folder)
-        self._body = load_scaled_image(
-            fetch_resource(microwave="microwave.png"), self.BODY_SIZE
-        )
+        self._body = load_scaled_image(fetch_resource(microwave="microwave.png"), self.BODY_SIZE)
         self._body_light = load_scaled_image(
             fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
