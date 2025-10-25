@@ -119,17 +119,21 @@ class Microwave:
             fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
 
-    def _create_buttons(self, buttons_folder: str):
+    def _create_buttons(
+        self, buttons_folder: str
+    ) -> list[dict[str, str | Surface | Rect]]:
         bx, by = self.BODY_POSITION
         bw, bh = self.BODY_SIZE
 
-        def rel_to_abs(pos_ratio, size_ratio):
+        def rel_to_abs(
+            pos_ratio: tuple[float, float], size_ratio: tuple[float, float]
+        ) -> Rect:
             """Перевод относительных координат и размеров в абсолютные."""
             rx, ry = pos_ratio
             rw, rh = size_ratio
             return (bx + bw * rx, by + bh * ry), (bw * rw, bh * rh)
 
-        buttons = []
+        buttons: list[dict[str, str | Surface | Rect]] = []
         for name, pos_ratio, size_ratio, action in self._button_data:
             pos, size = rel_to_abs(pos_ratio, size_ratio)
             image_path = os.path.join(buttons_folder, f"{name}.png")
