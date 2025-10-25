@@ -9,7 +9,7 @@ from utils import fetch_resource, load_scaled_image
 
 
 class App:
-    FPS: int = 60
+    FPS: int = 45
 
     def __init__(
         self,
@@ -26,7 +26,7 @@ class App:
             fetch_resource(background_image), main_window.get_size()
         )
 
-    def _draw_food(self) -> None:
+    def _draw_food(self, is_inside_microwave: bool = False) -> None:
         reversed_food_list: list[Food] = self._food_list.copy()
         reversed_food_list.reverse()
         for food in reversed_food_list:
@@ -48,12 +48,15 @@ class App:
         self._microwave.draw_timer(self._main_window)
         self._microwave.update_door()
 
-        if self._is_food_inside():
-            self._draw_food()
-            self._microwave.draw_door(self._main_window)
-        else:
-            self._microwave.draw_door(self._main_window)
-            self._draw_food()
+        for food in self._food_list:
+            if food.is_inside:
+                food.draw(self._main_window)
+
+        self._microwave.draw_door(self._main_window)
+
+        for food in self._food_list:
+            if not food.is_inside:
+                food.draw(self._main_window)
 
         pygame.display.flip()
 
