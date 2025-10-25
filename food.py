@@ -20,7 +20,6 @@ class Food:
     def __init__(
         self,
         states: list[ImageInfo],
-        size: tuple[int, int],
         position: tuple[int, int],
         microwave_inside_rect: Rect,
     ) -> None:
@@ -30,7 +29,7 @@ class Food:
         self.MICROWAVE_INSIDE = microwave_inside_rect
 
         self._position: tuple[int, int] = position
-        self._size: tuple[int, int] = size
+        self.size: tuple[int, int] = (350, 250)
         self._states_info: list[ImageInfo] = states
         self._states: dict[str, Surface] = {}
 
@@ -47,7 +46,7 @@ class Food:
         info: ImageInfo
         for info in self._states_info:
             self._states[info.state] = load_scaled_image(
-                fetch_resource(food=info.path), self._size
+                fetch_resource(food=info.path), self.size
             )
 
     def draw(self, window: Surface) -> None:
