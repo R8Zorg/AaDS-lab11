@@ -83,7 +83,10 @@ class Food:
         return False
 
     def handle_event(self, event: Event, is_door_closed: bool) -> bool:
-        if not self._rect.collidepoint(pygame.mouse.get_pos()):
+        if (
+            not self._rect.collidepoint(pygame.mouse.get_pos())
+            and not self._is_dragging
+        ):
             return False
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
