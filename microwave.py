@@ -15,9 +15,7 @@ class Microwave:
     BODY_SIZE: tuple[int, int] = (700, 450)
     INSIDE_RECT: Rect | None = None
 
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self) -> None:
         self.width, self.height = self.SIZE
         self.is_door_closed: bool = True
 
@@ -114,11 +112,12 @@ class Microwave:
             ("stop", (0.781, 0.733), (0.142, 0.133), self.on_stop_click),
         ]
         self._buttons = self._create_buttons(buttons_folder)
-        self._body = load_scaled_image(fetch_resource(microwave="microwave.png"), self.BODY_SIZE)
+        self._body = load_scaled_image(
+            fetch_resource(microwave="microwave.png"), self.BODY_SIZE
+        )
         self._body_light = load_scaled_image(
             fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
-
 
     def _create_buttons(self, buttons_folder: str):
         bx, by = self.BODY_POSITION
@@ -209,7 +208,7 @@ class Microwave:
                 self._is_door_closing = False
                 self.is_door_closed = True
 
-    def handle_event(self, event: Event) -> bool:
+    def handle_event(self, event: Event) -> None:
         mx, my = pygame.mouse.get_pos()
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
@@ -217,11 +216,11 @@ class Microwave:
                     if button["rect"].collidepoint(mx, my):  # type: ignore
                         button["action"]()  # type: ignore
                 if bool(self._is_door_openning + self._is_door_closing) is True:
-                    return False
+                    return
                 if self._closed_door_rect.collidepoint(mx, my):
                     self.is_door_closed = False
                     self._is_door_openning = True
-                    return True
+                    return
                 if self._openned_door_rect.collidepoint(mx, my):
                     self._is_door_closing = True
-                    return True
+                    return
