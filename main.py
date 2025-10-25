@@ -14,7 +14,9 @@ def to_image_info_list(directory: str, states: list[str]) -> list[ImageInfo]:
 
 
 def draw_food(window: Surface, food_list: list[Food]) -> None:
-    for food in food_list:
+    reversed_food_list = food_list.copy()
+    reversed_food_list.reverse()
+    for food in reversed_food_list:
         food.draw(window)
 
 
@@ -54,7 +56,7 @@ def render(
 def main() -> None:
     pygame.init()
     MAIN_WINDOW: Surface = pygame.display.set_mode((1500, 750))
-    FPS: int = 45
+    FPS: int = 60
 
     pygame.display.set_caption("Микроволновка")
     background: Surface = load_scaled_image(
