@@ -22,12 +22,12 @@ class Food:
         states: list[ImageInfo],
         size: tuple[int, int],
         position: tuple[int, int],
-        microwave_inside_rect: Rect
+        microwave_inside_rect: Rect,
     ) -> None:
         if states == []:
             raise AttributeError("Список состояний не может быть пустым")
 
-        self.MICROWAVE_INSIDE_RECT = microwave_inside_rect
+        self.MICROWAVE_INSIDE = microwave_inside_rect
 
         self._position: tuple[int, int] = position
         self._size: tuple[int, int] = size
@@ -68,15 +68,10 @@ class Food:
 
     def _handle_mouse_up(self, event: Event, is_door_closed: bool) -> bool:
         self._is_dragging = False
-        if (
-            self.MICROWAVE_INSIDE_RECT.collidepoint(self._rect.center)
-            and not is_door_closed
-        ):
+        if self.MICROWAVE_INSIDE.collidepoint(self._rect.center) and not is_door_closed:
             self.is_inside = True
-            self._rect.centerx = self.MICROWAVE_INSIDE_RECT.centerx
-            self._rect.bottom = (
-                self.MICROWAVE_INSIDE_RECT.bottom - self.INSIDE_OFFSET
-            )
+            self._rect.centerx = self.MICROWAVE_INSIDE.centerx
+            self._rect.bottom = self.MICROWAVE_INSIDE.bottom - self.INSIDE_OFFSET
             return True
         else:
             self.is_inside = False
