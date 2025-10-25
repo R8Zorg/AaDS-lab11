@@ -6,9 +6,10 @@ def load_scaled_image(path: str, size: tuple[int, int]) -> pygame.Surface:
 
 
 def fetch_resource(resource_name: str = "", food: str = "", microwave: str = "") -> str:
+    resources_folder: str = "resources"
     if food:
-        return "resources/food/" + food
+        return f"{resources_folder}/food/" + food
     elif microwave:
-        return "resources/microwave/" + microwave
+        return f"{resources_folder}/microwave/" + microwave
     else:
-        return "resources/" + resource_name
+        return f"{resources_folder}/" + resource_name
