@@ -4,7 +4,6 @@ import pygame
 from pygame.event import Event
 
 from food import Food, ImageInfo
-from food_item import FoodItem
 from microwave import Microwave
 from utils import fetch_resource, load_scaled_image
 
@@ -17,9 +16,6 @@ pygame.display.set_caption("Микроволновка")
 
 
 background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
-
-
-meat0 = FoodItem(fetch_resource(food="meat"), (1100, 260), inside_offset=0)
 
 
 def to_image_info_list(states: list[str]) -> list[ImageInfo]:
