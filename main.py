@@ -1,83 +1,97 @@
 import sys
 
 import pygame
+from pygame import Surface
 from pygame.event import Event
 
 from food import Food, ImageInfo
 from microwave import Microwave
 from utils import fetch_resource, load_scaled_image
 
-pygame.init()
+
+def to_image_info_list(directory: str, states: list[str]) -> list[ImageInfo]:
+    return [ImageInfo(state, f"{directory}/{state}.png") for state in states]
 
 
-WIN_W, WIN_H = 1500, 750
-WINDOW = pygame.display.set_mode((WIN_W, WIN_H))
-pygame.display.set_caption("Микроволновка")
-
-
-background = load_scaled_image(fetch_resource("background.png"), (WIN_W, WIN_H))
-
-
-def to_image_info_list(states: list[str]) -> list[ImageInfo]:
-    return [ImageInfo(state, f"meat/{state}.png") for state in states]
-
-
-# FOOD_HITBOX = pygame.Rect(385, 75, 480, 390)
-
-
-def draw_food(window: pygame.Surface) -> None:
+def draw_food(window: Surface, food_list: list[Food]) -> None:
     for food in food_list:
         food.draw(window)
 
 
-def is_food_inside() -> bool:
+def is_food_inside(food_list: list[Food]) -> bool:
     for food in food_list:
         if food.is_inside:
             return True
     return False
 
 
-def render(main_window: pygame.Surface, door_state: pygame.Surface) -> None:
-    WINDOW.blit(background, (0, 0))
-    WINDOW.blit(microwave.get_body(), microwave.BODY_POSITION)
+def render(
+    main_window: Surface,
+    background: Surface,
+    microwave: Microwave,
+    door_state: Surface,
+    food_list: list[Food],
+) -> None:
+    main_window.blit(background, (0, 0))
+    main_window.blit(microwave.get_body(), microwave.BODY_POSITION)
 
     microwave.draw_buttons(main_window)
     microwave.draw_timer(main_window)
-    if is_food_inside():
-        draw_food(main_window)
-        microwave.update_door()
+    microwave.update_door()
+
+    if is_food_inside(food_list):
+        draw_food(main_window, food_list)
         microwave.draw_door(main_window)
     else:
-        microwave.update_door()
         microwave.draw_door(main_window)
-        draw_food(main_window)
+        draw_food(main_window, food_list)
 
     # microwave.draw_door_hitboxes(WINDOW)
 
-    # meat0.draw(surface)
-    # pizza.draw(surface)
-    # egg.draw(surface)
-
     pygame.display.flip()
-    pygame.time.Clock().tick(45)
 
 
-if __name__ == "__main__":
-    microwave: Microwave = Microwave()
-    default_states: list[ImageInfo] = to_image_info_list(
-        ["frozen", "raw", "done", "overheated"]
+def main() -> None:
+    pygame.init()
+    MAIN_WINDOW: Surface = pygame.display.set_mode((1500, 750))
+    FPS: int = 45
+
+    pygame.display.set_caption("Микроволновка")
+    background: Surface = load_scaled_image(
+        fetch_resource("background.png"), MAIN_WINDOW.get_size()
     )
-    popcorn_states: list[ImageInfo] = to_image_info_list(["raw", "done", "overheated"])
-    meat = Food(default_states, (350, 250), (1100, 260), Microwave.INSIDE_RECT)
-    pizza = Food(default_states, (350, 250), (1100, 370), Microwave.INSIDE_RECT)
-    popcorn = Food(popcorn_states, (350, 250), (870, 470), Microwave.INSIDE_RECT)
+
+    microwave: Microwave = Microwave()
+
+    default_states: list[str] = ["frozen", "raw", "done", "overheated"]
+    popcorn_states: list[str] = ["raw", "done", "overheated"]
+    meat = Food(
+        to_image_info_list("meat", default_states),
+        (350, 250),
+        (1100, 260),
+        microwave.INSIDE_RECT,
+    )
+    pizza = Food(
+        to_image_info_list("pizza", default_states),
+        (350, 250),
+        (1100, 370),
+        microwave.INSIDE_RECT,
+    )
+    popcorn = Food(
+        to_image_info_list("popcorn", popcorn_states),
+        (350, 250),
+        (870, 470),
+        microwave.INSIDE_RECT,
+    )
     egg = Food(
-        to_image_info_list(["raw", "boom"]),
+        to_image_info_list("egg", ["raw", "boom"]),
         (350, 250),
         (1100, 480),
-        Microwave.INSIDE_RECT,
+        microwave.INSIDE_RECT,
     )
     food_list: list[Food] = [meat, pizza, popcorn, egg]
+
+    clock: pygame.time.Clock = pygame.time.Clock()
     is_running = True
     while is_running:
         event: Event
@@ -85,80 +99,19 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 is_running = False
                 break
-            if meat.handle_event(event, microwave.is_door_closed):
+            if any(
+                food.handle_event(event, microwave.is_door_closed)
+                for food in food_list
+            ):
                 continue
             else:
                 microwave.handle_event(event)
-        render(WINDOW, microwave._door_state)
+        render(MAIN_WINDOW, background, microwave, microwave._door_state, food_list)
+        clock.tick(FPS)
 
     pygame.quit()
     sys.exit()
 
-# running = True
-# while running:
-#     for event in pygame.event.get():
-#         if event.type == pygame.MOUSEBUTTONDOWN:
-#             if not door_locked:
-#                 if meat.handle_mouse_down(mx, my):
-#                     continue
-#                 if pizza.handle_mouse_down(mx, my):
-#                     continue
-#                 if popcorn.handle_mouse_down(mx, my):
-#                     continue
-#                 if egg.handle_mouse_down(mx, my):
-#                     continue
-#
-#         if event.type == pygame.MOUSEBUTTONUP:
-#             meat.handle_mouse_up()
-#             pizza.handle_mouse_up()
-#             popcorn.handle_mouse_up()
-#             egg.handle_mouse_up()
-#
-#         if event.type == pygame.MOUSEMOTION:
-#             meat.handle_mouse_motion(mx, my)
-#             pizza.handle_mouse_motion(mx, my)
-#             popcorn.handle_mouse_motion(mx, my)
-#             egg.handle_mouse_motion(mx, my)
-#
-#         if event.type == pygame.KEYDOWN:
-#             keys_map = {
-#                 pygame.K_1: ("meat", "frozen"),
-#                 pygame.K_2: ("meat", "raw"),
-#                 pygame.K_3: ("meat", "done"),
-#                 pygame.K_4: ("meat", "overheated"),
-#                 pygame.K_5: ("pizza", "frozen"),
-#                 pygame.K_6: ("pizza", "raw"),
-#                 pygame.K_7: ("pizza", "done"),
-#                 pygame.K_8: ("pizza", "overheated"),
-#                 pygame.K_9: ("popcorn", "raw"),
-#                 pygame.K_0: ("popcorn", "done"),
-#                 pygame.K_MINUS: ("popcorn", "overheated"),
-#                 pygame.K_q: ("egg", "raw"),
-#                 pygame.K_w: ("egg", "boom"),
-#             }
-#
-#             if event.key in keys_map:
-#                 item, state = keys_map[event.key]
-#                 obj = locals()[item]
-#                 obj.state = state
-#
-#                 if item == "egg" and state == "boom":
-#                     obj.rect.topleft = BODY_POS
-#                     obj.is_boom = True
-#
-#                 if item == "egg" and state == "raw":
-#                     obj.rect = obj.states["raw"].get_rect(topleft=(1100, 480))
-#                     obj.is_boom = False
-#
-#             if event.key == pygame.K_l:
-#                 light_on = not light_on
-#                 print("Свет:", "включен" if light_on else "выключен")
-#
-#     if egg.is_boom:
-#         WINDOW.blit(egg.states["boom"], BODY_POS)
-#     else:
-#         WINDOW.blit(body_light if light_on else body, BODY_POS)
-#
-#     for food in [meat, pizza, popcorn, egg]:
-#         if not (food.folder == "egg" and food.is_boom):
-#             food.draw(WINDOW, door_index)
+
+if __name__ == "__main__":
+    main()
