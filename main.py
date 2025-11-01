@@ -25,12 +25,12 @@ def main() -> None:
         FoodState("frozen", 20),
         FoodState("raw", 15),
         FoodState("done", 10),
-        FoodState("overheated", 5),
+        FoodState("overheated"),
     ]
     popcorn_states: list[FoodState] = [
         FoodState("raw", 15),
         FoodState("done", 10),
-        FoodState("overheated", 5),
+        FoodState("overheated"),
     ]
     meat = Food(
         to_image_info_list("meat", default_food_states),
@@ -48,7 +48,7 @@ def main() -> None:
         microwave.INSIDE_RECT,
     )
     egg = Food(
-        to_image_info_list("egg", [FoodState("raw", 0), FoodState("boom", 15)]),
+        to_image_info_list("egg", [FoodState("raw", 15), FoodState("boom")]),
         (1100, 480),
         microwave.INSIDE_RECT,
     )

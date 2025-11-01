@@ -10,7 +10,7 @@ from utils import fetch_resource, load_scaled_image
 @dataclass
 class FoodState:
     state: str
-    cooking_time: int
+    cooking_time: int | None = None
 
 
 @dataclass
