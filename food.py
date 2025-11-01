@@ -11,6 +11,7 @@ from utils import fetch_resource, load_scaled_image
 class FoodState:
     state: str
     cooking_time: int = 0
+    may_cool_down: bool = False
 
 
 @dataclass
@@ -58,7 +59,7 @@ class Food:
             )
         return states
 
-    def update_state(self, elapsed_time: int) -> None:
+    def heat_up(self, elapsed_time: int) -> None:
         if self.current_food_state >= self.max_food_states - 1:
             return
         self.cooked_time += elapsed_time
@@ -66,6 +67,18 @@ class Food:
         if self.cooked_time >= current_state.food_state.cooking_time:
             self.cooked_time = 0
             self.current_food_state += 1
+            current_state = self._states_info[self.current_food_state]
+            self._current_state = self._states[current_state.food_state.state]
+
+    def cool_down(self, elapsed_time: int) -> None:
+        current_state: ImageInfo = self._states_info[self.current_food_state]
+        if not current_state.food_state.may_cool_down:
+            return
+
+        self.cooked_time += elapsed_time
+        if self.cooked_time >= current_state.food_state.cooking_time:
+            self.cooked_time = 0
+            self.current_food_state -= 1
             current_state = self._states_info[self.current_food_state]
             self._current_state = self._states[current_state.food_state.state]
 
