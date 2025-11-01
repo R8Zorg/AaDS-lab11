@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,6 +9,7 @@ import pygame
 from pygame import Rect, Surface
 from pygame.event import Event
 
+from food import Food
 from microwave_timer import MicrowaveTimer
 from utils import fetch_resource, load_scaled_image
 
@@ -31,6 +33,8 @@ class Microwave:
         self.width, self.height = self.SIZE
         self.is_door_closed: bool = True
         self._timer = MicrowaveTimer()
+
+        self._last_time: float = 0
 
         self._body: Surface
         self._body_light: Surface
@@ -99,6 +103,9 @@ class Microwave:
         )
         self.INSIDE_RECT = self._closed_door_rect
 
+    def set_food_list(self, food_list: list[Food]) -> None:
+        self._food_list = food_list
+
     def get_body(self) -> Surface:
         return self._body_light if self._is_light_on else self._body
 
@@ -125,6 +132,7 @@ class Microwave:
 
     def on_start_click(self) -> None:
         if self.is_door_closed:
+            self._last_time = time.time()
             self._timer.start()
 
     def on_stop_click(self) -> None:
@@ -139,7 +147,6 @@ class Microwave:
         else:
             self._timer.update()
             current_time = self._timer.get_time_str()
-
         color: tuple[int, int, int] = (255, 255, 255)
         time_surface = self._timer_font.render(current_time, True, color)
         text_rect: Rect = time_surface.get_rect(
@@ -158,6 +165,19 @@ class Microwave:
     def draw_door(self, surface: Surface) -> None:
         door: Surface = self._door_frames[self._door_state]
         surface.blit(door, self._DOOR_RECT.topleft)
+
+    def update_food(self) -> None:
+        if not self.is_door_closed or not self._timer.is_running:
+            return
+
+        now: float = time.time()
+        elapsed: int = int(now - self._last_time)
+        if elapsed < 1:
+            return
+        for food in self._food_list:
+            if food.is_inside:
+                food.update_state(elapsed)
+                self._last_time = now
 
     def update_door(self) -> None:
         if self._is_door_openning:
