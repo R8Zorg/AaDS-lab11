@@ -14,7 +14,6 @@ from utils import fetch_resource, load_scaled_image
 
 @dataclass
 class Button:
-    name: str
     rect: Rect
     action: Callable[[], None]
     image: str | None = None
@@ -50,7 +49,7 @@ class Microwave:
         self._openned_door_rect: Rect = Rect(168, 30, 242, 556)
 
         self._is_light_on = False
-        self._buttons: list[Button]
+        self._buttons: dict[str, Button]
         self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 80)
 
         self.initialize_data()
@@ -75,20 +74,20 @@ class Microwave:
         ]
 
         buttons_folder = fetch_resource(microwave="buttons")
-        self._buttons = [
-            Button("timer", Rect(875, 125, 155, 65), self.on_timer_click),
-            Button("frozen", Rect(875, 207, 150, 60), self.on_quick_defrost_click),
-            Button("double_left", Rect(868, 282, 30, 38), self.on_double_left_click),
-            Button("left", Rect(901, 280, 25, 40), self.on_left_click),
-            Button("ok", Rect(930, 280, 40, 40), self.on_ok_click),
-            Button("right", Rect(975, 280, 25, 40), self.on_right_click),
-            Button("double_right", Rect(1005, 280, 30, 40), self.on_double_right_click),
-            Button("start", Rect(897, 340, 100, 60), self.on_start_click),
-            Button("stop", Rect(897, 420, 100, 60), self.on_stop_click),
-        ]
+        self._buttons = {
+            "timer": Button(Rect(875, 125, 155, 65), self.on_timer_click),
+            "frozen": Button(Rect(875, 207, 150, 60), self.on_quick_defrost_click),
+            "double_left": Button(Rect(868, 282, 30, 38), self.on_double_left_click),
+            "left": Button(Rect(901, 280, 25, 40), self.on_left_click),
+            "ok": Button(Rect(930, 280, 40, 40), self.on_ok_click),
+            "right": Button(Rect(975, 280, 25, 40), self.on_right_click),
+            "double_right": Button(Rect(1005, 280, 30, 40), self.on_double_right_click),
+            "start": Button(Rect(897, 340, 100, 60), self.on_start_click),
+            "stop": Button(Rect(897, 420, 100, 60), self.on_stop_click),
+        }
 
-        for button in self._buttons:
-            path: str = os.path.join(buttons_folder, f"{button.name}.png")
+        for name, button in self._buttons.items():
+            path: str = os.path.join(buttons_folder, f"{name}.png")
             if os.path.exists(path):
                 button.image = load_scaled_image(path, button.rect.size)
 
@@ -142,11 +141,13 @@ class Microwave:
 
         color: tuple[int, int, int] = (255, 255, 255)
         time_surface = self._timer_font.render(current_time, True, color)
-        # text_rect: Rect = time_surface.get_rect(center=TIMER_RECT.center)
-        surface.blit(time_surface, (885, 130))
+        text_rect: Rect = time_surface.get_rect(
+            center=self._buttons["timer"].rect.center
+        )
+        surface.blit(time_surface, text_rect)
 
     def draw_buttons(self, surface: Surface) -> None:
-        for button in self._buttons:
+        for _, button in self._buttons.items():
             surface.blit(button.image, button.rect.topleft)
 
     def draw_door_hitboxes(self, surface: Surface) -> None:
@@ -174,7 +175,7 @@ class Microwave:
         mx, my = pygame.mouse.get_pos()
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
-                for button in self._buttons:
+                for _, button in self._buttons.items():
                     if button.rect.collidepoint(mx, my):
                         button.action()
                 if bool(self._is_door_openning + self._is_door_closing) is True:
