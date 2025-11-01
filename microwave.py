@@ -171,12 +171,10 @@ class Microwave:
         time_elapsed: int = int(now - self._last_time)
         if time_elapsed < 1:
             return
-        if self.is_door_closed and self._timer.is_running:
-            for food in self._food_list:
-                if food.is_inside:
-                    food.heat_up(time_elapsed)
-        else:
-            for food in self._food_list:
+        for food in self._food_list:
+            if self.is_door_closed and self._timer.is_running and food.is_inside:
+                food.heat_up(time_elapsed)
+            else:
                 food.cool_down(time_elapsed)
         self._last_time = now
 
