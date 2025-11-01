@@ -6,8 +6,10 @@ class MicrowaveTimer:
     def __init__(self) -> None:
         self.is_showing_time: bool = True
         self._seconds: int = 0
+        self.elapsed_seconds: int = 0
         self.is_on_pause: bool = False
         self._last_time: float | None = None
+
         self._blink_state: bool = True
         self._blink_timer: float = 0.0
         self._blink_interval: float = 0.5
@@ -36,6 +38,7 @@ class MicrowaveTimer:
         self._seconds = 0
         self._last_time = None
         self._blink_count = 0
+        self.elapsed_seconds = 0
 
     def update(self) -> None:
         if self.is_showing_time:
@@ -57,6 +60,7 @@ class MicrowaveTimer:
             elapsed = now - self._last_time
             if elapsed >= 1:
                 self._seconds = max(0, self._seconds - int(elapsed))
+                self.elapsed_seconds += int(elapsed)
                 self._last_time = now
                 if self._seconds == 0:
                     self._blink_timer = time.time()
@@ -65,8 +69,7 @@ class MicrowaveTimer:
 
     def get_time_str(self) -> str:
         if self.is_showing_time:
-            now = datetime.now().strftime("%H:%M")
-            return now
+            return datetime.now().strftime("%H:%M")
 
         if self._seconds == 0 and not self.is_on_pause:
             return "" if not self._blink_state else "00:00"
