@@ -69,7 +69,6 @@ class Food:
             self.current_food_state += 1
             current_state = self._states_info[self.current_food_state]
             self._current_state = self._states[current_state.food_state.state]
-            print("Состояние обновлено")
 
     def draw(self, window: Surface) -> None:
         window.blit(self._current_state, self._rect.topleft)
