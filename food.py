@@ -59,7 +59,6 @@ class Food:
         return states
 
     def update_state(self, elapsed_time: int) -> None:
-        # print(f"{elapsed_time=}")
         if self.current_food_state >= self.max_food_states - 1:
             return
         self.cooked_time += elapsed_time
