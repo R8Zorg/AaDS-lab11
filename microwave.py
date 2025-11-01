@@ -1,5 +1,7 @@
 import os
 import re
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 
 import pygame
@@ -8,6 +10,14 @@ from pygame.event import Event
 
 from microwave_timer import MicrowaveTimer
 from utils import fetch_resource, load_scaled_image
+
+
+@dataclass
+class Button:
+    name: str
+    rect: Rect
+    action: Callable[[], None]
+    image: str | None = None
 
 
 class Microwave:
@@ -40,8 +50,7 @@ class Microwave:
         self._openned_door_rect: Rect = Rect(168, 30, 242, 556)
 
         self._is_light_on = False
-        self._button_data: list[tuple[str, tuple[int, int], tuple[int, int], object]]
-        self._buttons: list[dict[str, str | Surface | Rect]]
+        self._buttons: list[Button]
         self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 80)
 
         self.initialize_data()
@@ -66,30 +75,23 @@ class Microwave:
         ]
 
         buttons_folder = fetch_resource(microwave="buttons")
-        self._button_data = [
-            ("timer", (875, 125), (155, 65), self.on_timer_click),
-            ("frozen", (875, 207), (150, 60), self.on_quick_defrost_click),
-            ("double_left", (868, 282), (30, 38), self.on_double_left_click),
-            ("left", (901, 280), (25, 40), self.on_left_click),
-            ("ok", (930, 280), (40, 40), self.on_ok_click),
-            ("right", (975, 280), (25, 40), self.on_right_click),
-            ("double_right", (1005, 280), (30, 40), self.on_double_right_click),
-            ("start", (897, 340), (100, 60), self.on_start_click),
-            ("stop", (897, 420), (100, 60), self.on_stop_click),
+        self._buttons = [
+            Button("timer", Rect(875, 125, 155, 65), self.on_timer_click),
+            Button("frozen", Rect(875, 207, 150, 60), self.on_quick_defrost_click),
+            Button("double_left", Rect(868, 282, 30, 38), self.on_double_left_click),
+            Button("left", Rect(901, 280, 25, 40), self.on_left_click),
+            Button("ok", Rect(930, 280, 40, 40), self.on_ok_click),
+            Button("right", Rect(975, 280, 25, 40), self.on_right_click),
+            Button("double_right", Rect(1005, 280, 30, 40), self.on_double_right_click),
+            Button("start", Rect(897, 340, 100, 60), self.on_start_click),
+            Button("stop", Rect(897, 420, 100, 60), self.on_stop_click),
         ]
 
-        self._buttons = [
-            {
-                "name": name,
-                "image": load_scaled_image(
-                    os.path.join(buttons_folder, f"{name}.png"), size
-                ),
-                "rect": Rect(pos, size),
-                "action": action,
-            }
-            for name, pos, size, action in self._button_data
-            if os.path.exists(os.path.join(buttons_folder, f"{name}.png"))
-        ]
+        for button in self._buttons:
+            path: str = os.path.join(buttons_folder, f"{button.name}.png")
+            if os.path.exists(path):
+                button.image = load_scaled_image(path, button.rect.size)
+
         self._body = load_scaled_image(
             fetch_resource(microwave="microwave.png"), self.BODY_SIZE
         )
@@ -145,7 +147,7 @@ class Microwave:
 
     def draw_buttons(self, surface: Surface) -> None:
         for button in self._buttons:
-            surface.blit(button["image"], button["rect"].topleft)  # type: ignore
+            surface.blit(button.image, button.rect.topleft)
 
     def draw_door_hitboxes(self, surface: Surface) -> None:
         pygame.draw.rect(surface, (0, 255, 0), self._closed_door_rect, 2)
@@ -173,8 +175,8 @@ class Microwave:
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 for button in self._buttons:
-                    if button["rect"].collidepoint(mx, my):  # type: ignore
-                        button["action"]()  # type: ignore
+                    if button.rect.collidepoint(mx, my):
+                        button.action()
                 if bool(self._is_door_openning + self._is_door_closing) is True:
                     return
                 if self._closed_door_rect.collidepoint(mx, my):
