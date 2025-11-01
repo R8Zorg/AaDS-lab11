@@ -10,7 +10,7 @@ from utils import fetch_resource, load_scaled_image
 @dataclass
 class FoodState:
     state: str
-    cooking_time: int | None = None
+    cooking_time: int = 0
 
 
 @dataclass
@@ -33,27 +33,43 @@ class Food:
             raise AttributeError("Список состояний не может быть пустым")
 
         self.MICROWAVE_INSIDE = microwave_inside_rect
+        self.cooked_time: int = 0
+        self.current_food_state: int = 0
+        self.max_food_states: int = len(states)
+        self.is_inside: bool = False
 
         self._position: tuple[int, int] = position
         self.size: tuple[int, int] = (350, 250)
         self._states_info: list[ImageInfo] = states
-        self._states: dict[str, Surface] = {}
+        self._states: dict[str, Surface] = self._convert_states_to_surface()
 
-        self._convert_states_to_surface()
         self._current_state: Surface = next(iter(self._states.values()))
-        self.is_inside: bool = False
         self._rect = self._current_state.get_rect(topleft=position)
 
         self._is_dragging: bool = False
         self._offset_x = 0
         self._offset_y = 0
 
-    def _convert_states_to_surface(self) -> None:
-        info: ImageInfo
+    def _convert_states_to_surface(self) -> dict[str, Surface]:
+        states: dict[str, Surface] = {}
         for info in self._states_info:
-            self._states[info.food_state.state] = load_scaled_image(
+            states[info.food_state.state] = load_scaled_image(
                 fetch_resource(food=info.path), self.size
             )
+        return states
+
+    def update_state(self, elapsed_time: int) -> None:
+        # print(f"{elapsed_time=}")
+        if self.current_food_state >= self.max_food_states - 1:
+            return
+        self.cooked_time += elapsed_time
+        current_state = self._states_info[self.current_food_state]
+        if self.cooked_time >= current_state.food_state.cooking_time:
+            self.cooked_time = 0
+            self.current_food_state += 1
+            current_state = self._states_info[self.current_food_state]
+            self._current_state = self._states[current_state.food_state.state]
+            print("Состояние обновлено")
 
     def draw(self, window: Surface) -> None:
         window.blit(self._current_state, self._rect.topleft)
