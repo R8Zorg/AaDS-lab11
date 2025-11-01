@@ -124,7 +124,8 @@ class Microwave:
         self._timer.add_seconds(self.DOUBLE_CLICK_TIME)
 
     def on_start_click(self) -> None:
-        self._timer.start()
+        if self.is_door_closed:
+            self._timer.start()
 
     def on_stop_click(self) -> None:
         if self._timer.is_on_pause:
@@ -164,6 +165,7 @@ class Microwave:
                 self._door_state += 1
             else:
                 self._is_door_openning = False
+                self._timer.pause()
         elif self._is_door_closing:
             if self._door_state > 0:
                 self._door_state -= 1
