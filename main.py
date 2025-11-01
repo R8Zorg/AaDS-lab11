@@ -25,12 +25,12 @@ def main() -> None:
         FoodState("frozen", 2),
         FoodState("raw", 2),
         FoodState("done", 2),
-        FoodState("overheated"),
+        FoodState("overheated", may_cool_down=True),
     ]
     popcorn_states: list[FoodState] = [
         FoodState("raw", 2),
         FoodState("done", 2),
-        FoodState("overheated"),
+        FoodState("overheated", may_cool_down=True),
     ]
     meat = Food(
         to_image_info_list("meat", default_food_states),
