@@ -2,12 +2,15 @@ import pygame
 from pygame import Surface
 
 from app import App
-from food import Food, ImageInfo
+from food import Food, FoodState, ImageInfo
 from microwave import Microwave
 
 
-def to_image_info_list(directory: str, states: list[str]) -> list[ImageInfo]:
-    return [ImageInfo(state, f"{directory}/{state}.png") for state in states]
+def to_image_info_list(directory: str, states: list[FoodState]) -> list[ImageInfo]:
+    return [
+        ImageInfo(food_state, f"{directory}/{food_state.state}.png")
+        for food_state in states
+    ]
 
 
 def main() -> None:
@@ -18,8 +21,17 @@ def main() -> None:
 
     microwave: Microwave = Microwave()
 
-    default_food_states: list[str] = ["frozen", "raw", "done", "overheated"]
-    popcorn_states: list[str] = ["raw", "done", "overheated"]
+    default_food_states: list[FoodState] = [
+        FoodState("frozen", 20),
+        FoodState("raw", 15),
+        FoodState("done", 10),
+        FoodState("overheated", 5),
+    ]
+    popcorn_states: list[FoodState] = [
+        FoodState("raw", 15),
+        FoodState("done", 10),
+        FoodState("overheated", 5),
+    ]
     meat = Food(
         to_image_info_list("meat", default_food_states),
         (1100, 260),
@@ -36,7 +48,7 @@ def main() -> None:
         microwave.INSIDE_RECT,
     )
     egg = Food(
-        to_image_info_list("egg", ["raw", "boom"]),
+        to_image_info_list("egg", [FoodState("raw", 0), FoodState("boom", 15)]),
         (1100, 480),
         microwave.INSIDE_RECT,
     )
