@@ -167,17 +167,18 @@ class Microwave:
         surface.blit(door, self._DOOR_RECT.topleft)
 
     def update_food(self) -> None:
-        if not self.is_door_closed or not self._timer.is_running:
-            return
-
         now: float = time.time()
-        elapsed: int = int(now - self._last_time)
-        if elapsed < 1:
+        time_elapsed: int = int(now - self._last_time)
+        if time_elapsed < 1:
             return
-        for food in self._food_list:
-            if food.is_inside:
-                food.update_state(elapsed)
-                self._last_time = now
+        if self.is_door_closed and self._timer.is_running:
+            for food in self._food_list:
+                if food.is_inside:
+                    food.heat_up(time_elapsed)
+        else:
+            for food in self._food_list:
+                food.cool_down(time_elapsed)
+        self._last_time = now
 
     def update_door(self) -> None:
         if self._is_door_openning:
@@ -186,6 +187,7 @@ class Microwave:
             else:
                 self._is_door_openning = False
                 self._timer.pause()
+                self._last_time = time.time()
         elif self._is_door_closing:
             if self._door_state > 0:
                 self._door_state -= 1
