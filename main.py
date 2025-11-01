@@ -22,14 +22,14 @@ def main() -> None:
     microwave: Microwave = Microwave()
 
     default_food_states: list[FoodState] = [
-        FoodState("frozen", 20),
-        FoodState("raw", 15),
-        FoodState("done", 10),
+        FoodState("frozen", 2),
+        FoodState("raw", 2),
+        FoodState("done", 2),
         FoodState("overheated"),
     ]
     popcorn_states: list[FoodState] = [
-        FoodState("raw", 15),
-        FoodState("done", 10),
+        FoodState("raw", 2),
+        FoodState("done", 2),
         FoodState("overheated"),
     ]
     meat = Food(
@@ -48,14 +48,13 @@ def main() -> None:
         microwave.INSIDE_RECT,
     )
     egg = Food(
-        to_image_info_list("egg", [FoodState("raw", 15), FoodState("boom")]),
+        to_image_info_list("egg", [FoodState("raw", 2), FoodState("boom")]),
         (1100, 480),
         microwave.INSIDE_RECT,
     )
-
-    app: App = App(
-        MAIN_WINDOW, "background.png", microwave, [meat, pizza, popcorn, egg]
-    )
+    food_list = [meat, pizza, popcorn, egg]
+    microwave.set_food_list(food_list)
+    app: App = App(MAIN_WINDOW, "background.png", microwave, food_list)
     app.run()
 
 
