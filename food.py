@@ -8,8 +8,14 @@ from utils import fetch_resource, load_scaled_image
 
 
 @dataclass
-class ImageInfo:
+class FoodState:
     state: str
+    cooking_time: int
+
+
+@dataclass
+class ImageInfo:
+    food_state: FoodState
     path: str
 
 
@@ -45,7 +51,7 @@ class Food:
     def _convert_states_to_surface(self) -> None:
         info: ImageInfo
         for info in self._states_info:
-            self._states[info.state] = load_scaled_image(
+            self._states[info.food_state.state] = load_scaled_image(
                 fetch_resource(food=info.path), self.size
             )
 
