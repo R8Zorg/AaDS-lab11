@@ -11,7 +11,7 @@ from pygame.event import Event
 
 from food import Food
 from microwave_timer import MicrowaveTimer
-from utils import fetch_resource, load_scaled_image
+from utils import fetch_resource, load_meme_image, load_scaled_image
 
 
 @dataclass
@@ -56,6 +56,8 @@ class Microwave:
         self._buttons: dict[str, Button]
         self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 80)
 
+        self._meme_surface: Surface
+
         self.initialize_data()
 
     def sort_files_numerically(self, files: list[str]) -> list[str]:
@@ -78,16 +80,15 @@ class Microwave:
         ]
 
         buttons_folder = fetch_resource(microwave="buttons")
+        self._meme_surface = load_meme_image(fetch_resource(meme="1.jpg"), (170, 170))
         self._buttons = {
             "timer": Button(Rect(875, 125, 155, 65), self.on_timer_click),
-            "frozen": Button(Rect(875, 207, 150, 60), self.on_quick_defrost_click),
-            "double_left": Button(Rect(868, 282, 30, 38), self.on_double_left_click),
-            "left": Button(Rect(901, 280, 25, 40), self.on_left_click),
-            "ok": Button(Rect(930, 280, 40, 40), self.on_ok_click),
-            "right": Button(Rect(975, 280, 25, 40), self.on_right_click),
-            "double_right": Button(Rect(1005, 280, 30, 40), self.on_double_right_click),
-            "start": Button(Rect(897, 340, 100, 60), self.on_start_click),
-            "stop": Button(Rect(897, 420, 100, 60), self.on_stop_click),
+            "double_left": Button(Rect(870, 397, 30, 40), self.on_double_left_click),
+            "left": Button(Rect(910, 396, 25, 41), self.on_left_click),
+            "right": Button(Rect(970, 397, 25, 40), self.on_right_click),
+            "double_right": Button(Rect(1005, 397, 30, 40), self.on_double_right_click),
+            "start": Button(Rect(955, 445, 85, 60), self.on_start_click),
+            "stop": Button(Rect(865, 445, 85, 60), self.on_stop_click),
         }
 
         for name, button in self._buttons.items():
@@ -112,12 +113,6 @@ class Microwave:
     def on_timer_click(self) -> None:
         print("Нажата кнопка: timer")
 
-    def on_quick_defrost_click(self) -> None:
-        print("Нажата кнопка: frozen")
-
-    def on_ok_click(self) -> None:
-        print("Нажата кнопка: ok")
-
     def on_double_left_click(self) -> None:
         self._timer.add_seconds(-self.DOUBLE_CLICK_TIME)
 
@@ -140,6 +135,9 @@ class Microwave:
             self._timer.reset()
         else:
             self._timer.pause()
+
+    def draw_meme(self, surface: Surface) -> None:
+        surface.blit(self._meme_surface, (867, 207))
 
     def draw_timer(self, surface: Surface) -> None:
         if self._timer.is_showing_time:
