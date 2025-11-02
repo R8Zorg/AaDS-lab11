@@ -21,6 +21,8 @@ class MicrowaveTimer:
         self.seconds = max(0, self.seconds + seconds)
         if self.seconds != 0:
             self.is_showing_time = False
+        else:
+            self.reset()
 
     def start(self) -> None:
         if self.seconds > 0:

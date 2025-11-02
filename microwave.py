@@ -108,7 +108,9 @@ class Microwave:
         self._food_list = food_list
 
     def get_body(self) -> Surface:
-        return self._body_light if self._is_light_on else self._body
+        if self._timer.is_running:
+            return self._body_light
+        return self._body
 
     def on_timer_click(self) -> None:
         print("Нажата кнопка: timer")
