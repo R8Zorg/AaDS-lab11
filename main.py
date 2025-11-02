@@ -31,6 +31,7 @@ def main() -> None:
         FoodState("raw", 2),
         FoodState("done", 2),
         FoodState("overheated", 2, True),
+        FoodState("burnt_out", 0),
     ]
     meat = Food(
         to_image_info_list("meat", default_food_states),
