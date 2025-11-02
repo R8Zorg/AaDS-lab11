@@ -6,21 +6,17 @@ def load_scaled_image(path: str, size: tuple[int, int]) -> pygame.Surface:
     return pygame.transform.scale(pygame.image.load(path).convert_alpha(), size)
 
 
-def fetch_resource(
-    resource_name: str = "", food: str = "", microwave: str = "", meme: str = ""
-) -> str:
+def fetch_resource(resource_name: str = "", food: str = "", microwave: str = "") -> str:
     resources_folder: str = "resources"
     if food:
         return f"{resources_folder}/food/" + food
     elif microwave:
         return f"{resources_folder}/microwave/" + microwave
-    elif meme:
-        return f"{resources_folder}/meme/" + meme
     else:
         return f"{resources_folder}/" + resource_name
 
 
-def load_meme_image(path: str, target_size: tuple[int, int]) -> pygame.Surface:
+def load_external_image(path: str, target_size: tuple[int, int]) -> pygame.Surface:
     image = Image.open(path).convert("RGB")
     image = image.resize(target_size, Image.LANCZOS)
 

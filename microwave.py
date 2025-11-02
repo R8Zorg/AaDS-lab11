@@ -11,7 +11,7 @@ from pygame.event import Event
 
 from food import Food
 from microwave_timer import MicrowaveTimer
-from utils import fetch_resource, load_meme_image, load_scaled_image
+from utils import fetch_resource, load_external_image, load_scaled_image
 
 
 @dataclass
@@ -80,7 +80,9 @@ class Microwave:
         ]
 
         buttons_folder = fetch_resource(microwave="buttons")
-        self._meme_surface = load_meme_image(fetch_resource(meme="1.jpg"), (170, 170))
+        self._meme_surface = load_external_image(
+            fetch_resource("vibewave.png"), (160, 140)
+        )
         self._buttons = {
             "timer": Button(Rect(875, 125, 155, 65), self.on_timer_click),
             "double_left": Button(Rect(870, 397, 30, 40), self.on_double_left_click),
