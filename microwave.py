@@ -1,12 +1,24 @@
 import os
 import re
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 
 import pygame
 from pygame import Rect, Surface
 from pygame.event import Event
 
-from utils import fetch_resource, load_scaled_image
+from food import Food
+from microwave_timer import MicrowaveTimer
+from utils import fetch_resource, load_meme_image, load_scaled_image
+
+
+@dataclass
+class Button:
+    rect: Rect
+    action: Callable[[], None]
+    image: str | None = None
 
 
 class Microwave:
@@ -14,22 +26,18 @@ class Microwave:
     BODY_POSITION: tuple[int, int] = (350, 90)
     BODY_SIZE: tuple[int, int] = (700, 450)
     INSIDE_RECT: Rect | None = None
+    DOUBLE_CLICK_TIME: int = 30
+    CLICK_TIME: int = 10
 
     def __init__(self) -> None:
         self.width, self.height = self.SIZE
         self.is_door_closed: bool = True
+        self._timer = MicrowaveTimer()
+
+        self._last_time: float = 0
 
         self._body: Surface
         self._body_light: Surface
-
-        self._DOOR_OFFSET: tuple[float, float] = (-0.279, -0.144)
-        self._DOOR_SIZE_RATIO: tuple[float, float] = (1.014, 1.267)
-
-        self._CLOSED_DOOR_OFFSET: tuple[float, float] = (0.057, 0.056)
-        self._CLOSED_DOOR_SIZE_RATIO: tuple[float, float] = (0.671, 0.856)
-
-        self._OPENNED_DOOR_OFFSET: tuple[float, float] = (-0.259, -0.133)
-        self._OPENNED_DOOR_SIZE_RATIO: tuple[float, float] = (0.346, 1.236)
 
         self._DOOR_X_POSITION: int = self.BODY_POSITION[0] - 195
         self._DOOR_Y_POSITION: int = self.BODY_POSITION[1] - 65
@@ -38,42 +46,19 @@ class Microwave:
         self._is_door_closing: bool = False
         self._door_frames: list[Surface]
 
-        self._DOOR_RECT, self._closed_door_rect, self._openned_door_rect = (
-            self._resize()
+        self._DOOR_RECT: Rect = Rect(
+            self._DOOR_X_POSITION, self._DOOR_Y_POSITION, 710, 570
         )
-        self.INSIDE_RECT = self._closed_door_rect
+        self._closed_door_rect: Rect = Rect(389, 115, 469, 385)
+        self._openned_door_rect: Rect = Rect(168, 30, 242, 556)
 
         self._is_light_on = False
-        self._button_data: list[
-            tuple[str, tuple[float, float], tuple[float, float], object]
-        ]
-        self._buttons: list[dict[str, str | Surface | Rect]]
-        self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 74)
-        self._timer_text: datetime
+        self._buttons: dict[str, Button]
+        self._timer_font: pygame.font.SysFont = pygame.font.SysFont("Arial", 80)
+
+        self._meme_surface: Surface
 
         self.initialize_data()
-
-    def _resize(self) -> tuple[Rect, Rect, Rect]:
-        bx, by = self.BODY_POSITION
-        bw, bh = self.BODY_SIZE
-
-        def rel_rect(
-            offset_ratio: tuple[float, float], size_ratio: tuple[float, float]
-        ) -> Rect:
-            ox, oy = offset_ratio
-            sw, sh = size_ratio
-            return Rect(
-                bx + bw * ox,
-                by + bh * oy,
-                bw * sw,
-                bh * sh,
-            )
-
-        return (
-            rel_rect(self._DOOR_OFFSET, self._DOOR_SIZE_RATIO),
-            rel_rect(self._CLOSED_DOOR_OFFSET, self._CLOSED_DOOR_SIZE_RATIO),
-            rel_rect(self._OPENNED_DOOR_OFFSET, self._OPENNED_DOOR_SIZE_RATIO),
-        )
 
     def sort_files_numerically(self, files: list[str]) -> list[str]:
         return sorted(
@@ -95,101 +80,85 @@ class Microwave:
         ]
 
         buttons_folder = fetch_resource(microwave="buttons")
-        self._button_data = [
-            ("timer", (0.75, 0.077), (0.221, 0.144), self.on_timer_click),
-            ("frozen", (0.75, 0.26), (0.214, 0.133), self.on_quick_defrost_click),
-            ("double_left", (0.74, 0.426), (0.042, 0.084), self.on_double_left_click),
-            ("left", (0.787, 0.422), (0.035, 0.088), self.on_left_click),
-            ("ok", (0.828, 0.422), (0.057, 0.088), self.on_ok_click),
-            ("right", (0.892, 0.422), (0.035, 0.088), self.on_right_click),
-            (
-                "double_right",
-                (0.935, 0.422),
-                (0.042, 0.088),
-                self.on_double_right_click,
-            ),
-            ("start", (0.781, 0.555), (0.142, 0.133), self.on_start_click),
-            ("stop", (0.781, 0.733), (0.142, 0.133), self.on_stop_click),
-        ]
-        self._buttons = self._create_buttons(buttons_folder)
+        self._meme_surface = load_meme_image(fetch_resource(meme="1.jpg"), (170, 170))
+        self._buttons = {
+            "timer": Button(Rect(875, 125, 155, 65), self.on_timer_click),
+            "double_left": Button(Rect(870, 397, 30, 40), self.on_double_left_click),
+            "left": Button(Rect(910, 396, 25, 41), self.on_left_click),
+            "right": Button(Rect(970, 397, 25, 40), self.on_right_click),
+            "double_right": Button(Rect(1005, 397, 30, 40), self.on_double_right_click),
+            "start": Button(Rect(955, 445, 85, 60), self.on_start_click),
+            "stop": Button(Rect(865, 445, 85, 60), self.on_stop_click),
+        }
+
+        for name, button in self._buttons.items():
+            path: str = os.path.join(buttons_folder, f"{name}.png")
+            if os.path.exists(path):
+                button.image = load_scaled_image(path, button.rect.size)
+
         self._body = load_scaled_image(
             fetch_resource(microwave="microwave.png"), self.BODY_SIZE
         )
         self._body_light = load_scaled_image(
             fetch_resource(microwave="microwave_light.png"), self.BODY_SIZE
         )
+        self.INSIDE_RECT = self._closed_door_rect
 
-    def _create_buttons(
-        self, buttons_folder: str
-    ) -> list[dict[str, str | Surface | Rect]]:
-        bx, by = self.BODY_POSITION
-        bw, bh = self.BODY_SIZE
-
-        def rel_to_abs(
-            pos_ratio: tuple[float, float], size_ratio: tuple[float, float]
-        ) -> Rect:
-            """Перевод относительных координат и размеров в абсолютные."""
-            rx, ry = pos_ratio
-            rw, rh = size_ratio
-            return (bx + bw * rx, by + bh * ry), (bw * rw, bh * rh)
-
-        buttons: list[dict[str, str | Surface | Rect]] = []
-        for name, pos_ratio, size_ratio, action in self._button_data:
-            pos, size = rel_to_abs(pos_ratio, size_ratio)
-            image_path = os.path.join(buttons_folder, f"{name}.png")
-            if not os.path.exists(image_path):
-                continue
-
-            buttons.append(
-                {
-                    "name": name,
-                    "image": load_scaled_image(image_path, size),
-                    "rect": Rect(pos, size),
-                    "action": action,
-                }
-            )
-        return buttons
+    def set_food_list(self, food_list: list[Food]) -> None:
+        self._food_list = food_list
 
     def get_body(self) -> Surface:
-        return self._body_light if self._is_light_on else self._body
+        if self._timer.is_running:
+            return self._body_light
+        return self._body
 
     def on_timer_click(self) -> None:
         print("Нажата кнопка: timer")
 
-    def on_quick_defrost_click(self) -> None:
-        print("Нажата кнопка: frozen")
-
     def on_double_left_click(self) -> None:
-        print("Нажата кнопка: double_left")
+        self._timer.add_seconds(-self.DOUBLE_CLICK_TIME)
 
     def on_left_click(self) -> None:
-        print("Нажата кнопка: left")
-
-    def on_ok_click(self) -> None:
-        print("Нажата кнопка: ok")
+        self._timer.add_seconds(-self.CLICK_TIME)
 
     def on_right_click(self) -> None:
-        print("Нажата кнопка: right")
+        self._timer.add_seconds(self.CLICK_TIME)
 
     def on_double_right_click(self) -> None:
-        print("Нажата кнопка: double_right")
+        self._timer.add_seconds(self.DOUBLE_CLICK_TIME)
 
     def on_start_click(self) -> None:
-        print("Нажата кнопка: start")
+        if self.is_door_closed:
+            self._last_time = time.time()
+            self._timer.start()
+            self._is_light_on = True
 
     def on_stop_click(self) -> None:
-        print("Нажата кнопка: stop")
+        self._is_light_on = False
+        if self._timer.is_on_pause:
+            self._timer.reset()
+        else:
+            self._timer.pause()
+
+    def draw_meme(self, surface: Surface) -> None:
+        surface.blit(self._meme_surface, (867, 207))
 
     def draw_timer(self, surface: Surface) -> None:
-        current_time = datetime.now().strftime("%H:%M")
-
-        time_surface = self._timer_font.render(current_time, True, (0, 255, 0))
-
-        surface.blit(time_surface, (885, 130))
+        if self._timer.is_showing_time:
+            current_time: str = datetime.now().strftime("%H:%M")
+        else:
+            self._timer.update()
+            current_time = self._timer.get_time_str()
+        color: tuple[int, int, int] = (255, 255, 255)
+        time_surface = self._timer_font.render(current_time, True, color)
+        text_rect: Rect = time_surface.get_rect(
+            center=self._buttons["timer"].rect.center
+        )
+        surface.blit(time_surface, text_rect)
 
     def draw_buttons(self, surface: Surface) -> None:
-        for button in self._buttons:
-            surface.blit(button["image"], button["rect"].topleft)  # type: ignore
+        for _, button in self._buttons.items():
+            surface.blit(button.image, button.rect.topleft)
 
     def draw_door_hitboxes(self, surface: Surface) -> None:
         pygame.draw.rect(surface, (0, 255, 0), self._closed_door_rect, 2)
@@ -199,12 +168,27 @@ class Microwave:
         door: Surface = self._door_frames[self._door_state]
         surface.blit(door, self._DOOR_RECT.topleft)
 
+    def update_food(self) -> None:
+        now: float = time.time()
+        time_elapsed: int = int(now - self._last_time)
+        if time_elapsed < 1:
+            return
+        for food in self._food_list:
+            if self.is_door_closed and self._timer.is_running and food.is_inside:
+                food.heat_up(time_elapsed)
+            else:
+                food.cool_down(time_elapsed)
+        self._last_time = now
+
     def update_door(self) -> None:
         if self._is_door_openning:
             if self._door_state < len(self._door_frames) - 1:
                 self._door_state += 1
             else:
                 self._is_door_openning = False
+                self._timer.pause()
+                self._last_time = time.time()
+                self._is_light_on = False
         elif self._is_door_closing:
             if self._door_state > 0:
                 self._door_state -= 1
@@ -216,9 +200,9 @@ class Microwave:
         mx, my = pygame.mouse.get_pos()
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
-                for button in self._buttons:
-                    if button["rect"].collidepoint(mx, my):  # type: ignore
-                        button["action"]()  # type: ignore
+                for _, button in self._buttons.items():
+                    if button.rect.collidepoint(mx, my):
+                        button.action()
                 if bool(self._is_door_openning + self._is_door_closing) is True:
                     return
                 if self._closed_door_rect.collidepoint(mx, my):
