@@ -129,8 +129,10 @@ class Microwave:
         if self.is_door_closed:
             self._last_time = time.time()
             self._timer.start()
+            self._is_light_on = True
 
     def on_stop_click(self) -> None:
+        self._is_light_on = False
         if self._timer.is_on_pause:
             self._timer.reset()
         else:
@@ -184,6 +186,7 @@ class Microwave:
                 self._is_door_openning = False
                 self._timer.pause()
                 self._last_time = time.time()
+                self._is_light_on = False
         elif self._is_door_closing:
             if self._door_state > 0:
                 self._door_state -= 1
