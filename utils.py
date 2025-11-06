@@ -16,8 +16,8 @@ def fetch_resource(resource_name: str = "", food: str = "", microwave: str = "")
         return f"{resources_folder}/" + resource_name
 
 
-def load_external_image(path: str, target_size: tuple[int, int]) -> pygame.Surface:
-    image = Image.open(path).convert("RGB")
+def load_image(path: str, target_size: tuple[int, int]) -> pygame.Surface:
+    image: Image = Image.open(path).convert("RGB")
     image = image.resize(target_size, Image.LANCZOS)
 
     mode = image.mode
