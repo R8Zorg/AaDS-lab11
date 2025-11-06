@@ -30,8 +30,6 @@ class Food:
         position: tuple[int, int],
         microwave_inside_rect: Rect,
     ) -> None:
-        if states == []:
-            raise AttributeError("Список состояний не может быть пустым")
 
         self.MICROWAVE_INSIDE = microwave_inside_rect
         self.cooked_time: int = 0
@@ -63,7 +61,7 @@ class Food:
         if self.current_food_state >= self.max_food_states - 1:
             return
         self.cooked_time += elapsed_time
-        current_state = self._states_info[self.current_food_state]
+        current_state: ImageInfo = self._states_info[self.current_food_state]
         if self.cooked_time >= current_state.food_state.cooking_time:
             self.cooked_time = 0
             self.current_food_state += 1
@@ -124,7 +122,7 @@ class Food:
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 return self._handle_mouse_down(event, is_door_closed)
-            case pygame.MOUSEBUTTONUP if event:
+            case pygame.MOUSEBUTTONUP:
                 return self._handle_mouse_up(event, is_door_closed)
             case pygame.MOUSEMOTION if self._is_dragging:
                 return self._handle_mouse_motion(event)
