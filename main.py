@@ -15,7 +15,7 @@ def to_image_info_list(directory: str, states: list[FoodState]) -> list[ImageInf
 
 def main() -> None:
     pygame.init()
-    WINDOW_SIZE = (1500, 750)
+    WINDOW_SIZE: tuple[int, int] = (1500, 750)
     MAIN_WINDOW: Surface = pygame.display.set_mode(WINDOW_SIZE)
     pygame.display.set_caption("Микроволновка")
 
@@ -45,7 +45,7 @@ def main() -> None:
     )
     popcorn = Food(
         to_image_info_list("popcorn", popcorn_states),
-        (870, 470),
+        (50, 470),
         microwave.INSIDE_RECT,
     )
     egg = Food(
@@ -53,7 +53,7 @@ def main() -> None:
         (1100, 480),
         microwave.INSIDE_RECT,
     )
-    food_list = [meat, pizza, popcorn, egg]
+    food_list: list[Food] = [meat, pizza, popcorn, egg]
     microwave.set_food_list(food_list)
     app: App = App(MAIN_WINDOW, "background.png", microwave, food_list)
     app.run()
