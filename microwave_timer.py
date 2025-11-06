@@ -9,10 +9,10 @@ class MicrowaveTimer:
         self.seconds: int = 0
         self.elapsed_seconds: int = 0
         self.is_on_pause: bool = False
-        self._last_time: float | None = None
+        self._previous_time: float | None = None
 
         self._blink_state: bool = True
-        self._blink_timer: float = 0.0
+        self._blink_last_time: float = 0.0
         self._blink_interval: float = 0.5
         self._blink_count: int = 0
         self._max_blinks: int = 6
@@ -29,20 +29,20 @@ class MicrowaveTimer:
             self.is_showing_time = False
             self.is_running = True
             self.is_on_pause = False
-            self._last_time = time.time()
+            self._previous_time = time.time()
 
     def pause(self) -> None:
         if not self.is_showing_time:
             self.is_on_pause = True
             self.is_running = False
-            self._last_time = None
+            self._previous_time = None
 
     def reset(self) -> None:
         self.is_showing_time = True
         self.is_running = False
         self.is_on_pause = False
         self.seconds = 0
-        self._last_time = None
+        self._previous_time = None
         self._blink_count = 0
         self.elapsed_seconds = 0
 
@@ -53,23 +53,23 @@ class MicrowaveTimer:
         if self.seconds == 0 and not self.is_on_pause:
             if self._blink_count < self._max_blinks:
                 now = time.time()
-                if now - self._blink_timer > self._blink_interval:
+                if now - self._blink_last_time > self._blink_interval:
                     self._blink_state = not self._blink_state
-                    self._blink_timer = now
+                    self._blink_last_time = time.time()
                     self._blink_count += 1
             else:
                 self.reset()
             return
 
-        if not self.is_on_pause and self._last_time is not None:
+        if not self.is_on_pause and self._previous_time is not None:
             now = time.time()
-            elapsed = now - self._last_time
+            elapsed = now - self._previous_time
             if elapsed >= 1:
                 self.seconds = max(0, self.seconds - int(elapsed))
                 self.elapsed_seconds += int(elapsed)
-                self._last_time = now
+                self._previous_time = now
                 if self.seconds == 0:
-                    self._blink_timer = time.time()
+                    self._blink_last_time = time.time()
                     self._blink_state = True
                     self._blink_count = 0
 
