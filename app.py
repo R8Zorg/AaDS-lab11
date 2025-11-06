@@ -26,18 +26,6 @@ class App:
             fetch_resource(background_image), main_window.get_size()
         )
 
-    def _draw_food(self, is_inside_microwave: bool = False) -> None:
-        reversed_food_list: list[Food] = self._food_list.copy()
-        reversed_food_list.reverse()
-        for food in reversed_food_list:
-            food.draw(self._main_window)
-
-    def _is_food_inside(self) -> bool:
-        for food in self._food_list:
-            if food.is_inside:
-                return True
-        return False
-
     def _render(self) -> None:
         self._main_window.blit(self._background, (0, 0))
         self._main_window.blit(
@@ -46,7 +34,7 @@ class App:
 
         self._microwave.draw_buttons(self._main_window)
         self._microwave.draw_timer(self._main_window)
-        self._microwave.draw_meme(self._main_window)
+        self._microwave.draw_image(self._main_window)
         self._microwave.update_food()
         self._microwave.update_door()
 
