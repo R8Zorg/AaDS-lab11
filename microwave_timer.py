@@ -15,7 +15,7 @@ class MicrowaveTimer:
         self._blink_last_time: float = 0.0
         self._blink_interval: float = 0.5
         self._blink_count: int = 0
-        self._max_blinks: int = 6
+        self._max_blinks: int = 5
 
     def add_seconds(self, seconds: int) -> None:
         self.seconds = max(0, self.seconds + seconds)
@@ -51,14 +51,14 @@ class MicrowaveTimer:
             return
 
         if self.seconds == 0 and not self.is_on_pause:
-            if self._blink_count < self._max_blinks:
-                now = time.time()
-                if now - self._blink_last_time > self._blink_interval:
+            now = time.time()
+            if now - self._blink_last_time > self._blink_interval:
+                if self._blink_count < self._max_blinks:
                     self._blink_state = not self._blink_state
                     self._blink_last_time = time.time()
                     self._blink_count += 1
-            else:
-                self.reset()
+                else:
+                    self.reset()
             return
 
         if not self.is_on_pause and self._previous_time is not None:
@@ -69,6 +69,7 @@ class MicrowaveTimer:
                 self.elapsed_seconds += int(elapsed)
                 self._previous_time = now
                 if self.seconds == 0:
+                    self._previous_time = None
                     self._blink_last_time = time.time()
                     self._blink_state = True
                     self._blink_count = 0

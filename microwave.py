@@ -3,7 +3,6 @@ import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 import pygame
 from pygame import Rect, Surface
@@ -108,7 +107,7 @@ class Microwave:
         self._food_list = food_list
 
     def get_body(self) -> Surface:
-        if self._timer.is_running:
+        if self._is_light_on:
             return self._body_light
         return self._body
 
@@ -135,22 +134,21 @@ class Microwave:
 
     def on_stop_click(self) -> None:
         self._is_light_on = False
-        if self._timer.is_on_pause:
-            self._timer.reset()
-        else:
+        if not self._timer.is_on_pause and self._timer.is_running:
             self._timer.pause()
+        else:
+            self._timer.reset()
 
-    def draw_image(self, surface: Surface) -> None:
+    def draw_logo(self, surface: Surface) -> None:
         surface.blit(self._logo_surface, (867, 207))
 
     def draw_timer(self, surface: Surface) -> None:
-        if self._timer.is_showing_time:
-            current_time: str = datetime.now().strftime("%H:%M")
-        else:
-            self._timer.update()
-            current_time = self._timer.get_time_str()
+        self._timer.update()
+        if self._timer.seconds == 0:
+            self._is_light_on = False
+        current_time = self._timer.get_time_str()
         color: tuple[int, int, int] = (255, 255, 255)
-        time_surface = self._timer_font.render(current_time, True, color)
+        time_surface: Surface = self._timer_font.render(current_time, True, color)
         text_rect: Rect = time_surface.get_rect(
             center=self._buttons["timer"].rect.center
         )
@@ -184,11 +182,11 @@ class Microwave:
         if self._is_door_openning:
             self._timer.pause()
             self._previous_time = time.time()
+            self._is_light_on = False
             if self._door_state < len(self._door_frames) - 1:
                 self._door_state += 1
             else:
                 self._is_door_openning = False
-                self._is_light_on = False
         elif self._is_door_closing:
             if self._door_state > 0:
                 self._door_state -= 1
