@@ -34,7 +34,7 @@ class App:
 
         self._microwave.draw_buttons(self._main_window)
         self._microwave.draw_timer(self._main_window)
-        self._microwave.draw_image(self._main_window)
+        self._microwave.draw_logo(self._main_window)
         self._microwave.update_food()
         self._microwave.update_door()
 
