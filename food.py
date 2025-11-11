@@ -46,8 +46,8 @@ class Food:
         self._rect = self._current_state.get_rect(topleft=position)
 
         self._is_dragging: bool = False
-        self._offset_x = 0
-        self._offset_y = 0
+        self._offset_x: int = 0
+        self._offset_y: int = 0
 
     def _convert_states_to_surface(self) -> dict[str, Surface]:
         states: dict[str, Surface] = {}
@@ -87,12 +87,10 @@ class Food:
         mx, my = event.pos
         if self.is_inside and is_door_closed:
             return False
-        if self._rect.collidepoint(mx, my):
-            self._is_dragging = True
-            self._offset_x = self._rect.x - mx
-            self._offset_y = self._rect.y - my
-            return True
-        return False
+        self._is_dragging = True
+        self._offset_x = self._rect.x - mx
+        self._offset_y = self._rect.y - my
+        return True
 
     def _handle_mouse_up(self, event: Event, is_door_closed: bool) -> bool:
         self._is_dragging = False
